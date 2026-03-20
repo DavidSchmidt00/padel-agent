@@ -18,9 +18,10 @@ export default function VotePage({ voteId }) {
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [voterName, setVoterName] = useState('')
-  const [pendingVotes, setPendingVotes] = useState({})   // {slot_id: true|false} before submit
-  const [submittedVotes, setSubmittedVotes] = useState(null) // {slot_id: bool} after submit
+  const [pendingVotes, setPendingVotes] = useState({})   // {slot_id: true|undefined} before submit
+  const [submittedVotes, setSubmittedVotes] = useState(null) // {slot_id: bool|undefined} after submit
   const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState(null)
   const [openPopover, setOpenPopover] = useState(null) // slot_id of open attendee popover
   const timerRef = useRef(null)
 
@@ -55,6 +56,7 @@ export default function VotePage({ voteId }) {
   async function handleSubmitVotes() {
     if (!voterName.trim() || submitting) return
     setSubmitting(true)
+    setSubmitError(null)
     try {
       const votes = session.slots.map(s => ({
         slot_id: s.slot_id,
@@ -65,9 +67,14 @@ export default function VotePage({ voteId }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ voter_name: voterName.trim(), votes }),
       })
-      if (!res.ok) return
+      if (!res.ok) {
+        setSubmitError(t('votePage.submit_error'))
+        return
+      }
       const data = await res.json()
-      setSession(prev => prev ? { ...prev, tally: data.tally, voter_count: data.voter_count, voters: data.voters, attendees: data.attendees } : prev)
+      setSession(prev => prev
+        ? { ...prev, tally: data.tally, voter_count: data.voter_count, voters: data.voters, attendees: data.attendees }
+        : prev)
       setSubmittedVotes({ ...pendingVotes })
     } finally {
       setSubmitting(false)
@@ -77,12 +84,13 @@ export default function VotePage({ voteId }) {
   function handleChangeVote() {
     setPendingVotes({ ...submittedVotes })
     setSubmittedVotes(null)
+    setSubmitError(null)
   }
 
   if (loading) return <div className="find-container"><p className="find-summary">{t('votePage.loading')}</p></div>
   if (notFound) return <div className="find-container"><p className="find-error">{t('votePage.not_found')}</p></div>
 
-  const allAnswered = session?.slots.every(s => pendingVotes[s.slot_id] !== undefined)
+  const unvotedCount = session?.slots.filter(s => pendingVotes[s.slot_id] === undefined).length ?? 0
 
   // Set of slot IDs that have reached their threshold
   const winners = new Set(
@@ -109,10 +117,14 @@ export default function VotePage({ voteId }) {
         </div>
       )}
 
-      {/* Voter list */}
+      {/* Voter list with count */}
       {session?.voters?.length > 0 && (
         <p style={{ margin: '0 0 12px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
           {session.voters.join(' · ')}
+          {' '}
+          <span style={{ color: 'var(--text-tertiary)' }}>
+            ({t('votePage.voters_label', { count: session.voter_count })})
+          </span>
         </p>
       )}
 
@@ -121,11 +133,13 @@ export default function VotePage({ voteId }) {
         {session?.slots.map(slot => {
           const yesCount = session.tally[slot.slot_id] || 0
           const slotAttendees = session.attendees?.[slot.slot_id] ?? []
-          const total = session.voter_count
           const thresh = threshold(slot.court_type)
           const pct = Math.min(100, Math.round((yesCount / thresh) * 100))
           const isWinner = winners.has(slot.slot_id)
-          const myAnswer = submittedVotes !== null ? submittedVotes[slot.slot_id] : pendingVotes[slot.slot_id]
+          // After submit, treat unvoted (undefined) as "can't attend" (false)
+          const myAnswer = submittedVotes !== null
+            ? (submittedVotes[slot.slot_id] ?? false)
+            : pendingVotes[slot.slot_id]
 
           return (
             <div
@@ -180,7 +194,7 @@ export default function VotePage({ voteId }) {
                 }} />
               </div>
 
-              {/* Can / Can't buttons + book button */}
+              {/* Can attend toggle + book button */}
               <div style={{ display: 'flex', gap: '6px', alignItems: 'center', width: '100%' }}>
                 <button
                   style={{
@@ -192,23 +206,12 @@ export default function VotePage({ voteId }) {
                     whiteSpace: 'nowrap',
                   }}
                   disabled={submittedVotes !== null}
-                  onClick={() => setPendingVotes(prev => ({ ...prev, [slot.slot_id]: true }))}
+                  onClick={() => setPendingVotes(prev => ({
+                    ...prev,
+                    [slot.slot_id]: prev[slot.slot_id] === true ? undefined : true,
+                  }))}
                 >
                   ✓ {t('votePage.can_attend')}
-                </button>
-                <button
-                  style={{
-                    padding: '4px 12px', fontSize: '0.8rem', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
-                    border: `1px solid ${myAnswer === false ? 'rgb(220,38,38)' : 'var(--border-color)'}`,
-                    background: myAnswer === false ? 'rgba(220,38,38,0.1)' : 'var(--bg-surface-raised)',
-                    color: 'var(--text-primary)',
-                    fontWeight: myAnswer === false ? 600 : 400,
-                    whiteSpace: 'nowrap',
-                  }}
-                  disabled={submittedVotes !== null}
-                  onClick={() => setPendingVotes(prev => ({ ...prev, [slot.slot_id]: false }))}
-                >
-                  ✗ {t('votePage.cant_attend')}
                 </button>
                 <a
                   href={isWinner ? slot.booking_link : undefined}
@@ -225,13 +228,20 @@ export default function VotePage({ voteId }) {
         })}
       </div>
 
+      {/* Unvoted slots hint */}
+      {submittedVotes === null && voterName.trim() && unvotedCount > 0 && (
+        <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '10px 0 0' }}>
+          {t('votePage.unvoted_hint', { count: unvotedCount })}
+        </p>
+      )}
+
       {/* Submit / Change row */}
       <div style={{ marginTop: '14px', display: 'flex', gap: '8px', alignItems: 'center' }}>
         {submittedVotes === null ? (
           <button
             className="find-submit"
-            style={{ margin: 0, opacity: (!voterName.trim() || !allAnswered) ? 0.5 : 1 }}
-            disabled={!voterName.trim() || !allAnswered || submitting}
+            style={{ margin: 0, opacity: !voterName.trim() ? 0.5 : 1 }}
+            disabled={!voterName.trim() || submitting}
             onClick={handleSubmitVotes}
           >
             {submitting ? t('votePage.submitting') : t('votePage.submit_btn')}
@@ -245,6 +255,11 @@ export default function VotePage({ voteId }) {
           </>
         )}
       </div>
+
+      {/* Submit error */}
+      {submitError && (
+        <p style={{ fontSize: '0.8rem', color: 'rgb(220,38,38)', marginTop: '8px' }}>{submitError}</p>
+      )}
 
       <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '16px' }}>
         {t('votePage.expires_note')}
