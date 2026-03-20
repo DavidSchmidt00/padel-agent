@@ -1,6 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 
+// Format ISO date (yyyy-mm-dd) as dd.mm.yyyy
+function formatDate(iso) {
+  const [y, m, d] = iso.split('-')
+  return `${d}.${m}.${y}`
+}
+
 // Court-type-aware consensus threshold
 function threshold(courtType) {
   return courtType === 'SINGLE' ? 2 : 4
@@ -133,7 +139,7 @@ export default function VotePage({ voteId }) {
             >
               {/* Slot header */}
               <div style={{ display: 'flex', width: '100%', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                <span className="find-slot-time">{slot.date} {slot.local_time}</span>
+                <span className="find-slot-time">{formatDate(slot.date)} {slot.local_time}</span>
                 <span className="find-slot-court" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '200px' }}>{slot.court}</span>
                 <span className="find-slot-meta">{slot.duration} min</span>
                 <span className="find-slot-price">{slot.price}</span>
@@ -147,7 +153,7 @@ export default function VotePage({ voteId }) {
                       textDecoration: 'none',
                     }}
                   >
-                    {t('votePage.attendees')}: {yesCount}/{thresh}
+                    <span className="attendees-label">{t('votePage.attendees')}: </span>{yesCount}/{thresh}
                   </button>
                   {openPopover === slot.slot_id && (
                     <div

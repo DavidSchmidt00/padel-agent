@@ -1609,4 +1609,8 @@ body {
   .find-book-btn {
     margin-left: auto;
   }
+
+  .attendees-label {
+    display: none;
+  }
 }
