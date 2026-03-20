@@ -628,7 +628,14 @@ def main() -> None:
             "No session found — switching to pairing code for %s…",
             settings.whatsapp_phone_number,
         )
-        await wa_client.PairPhone(settings.whatsapp_phone_number, True)
+        try:
+            code = wa_client.PairPhone(settings.whatsapp_phone_number, True)
+            logger.info("=" * 50)
+            logger.info("PAIRING CODE: %s", code)
+            logger.info("On your phone: WhatsApp → Linked Devices → Link with phone number")
+            logger.info("=" * 50)
+        except Exception:
+            logger.exception("PairPhone failed — cannot generate pairing code")
 
     @client.event(JoinedGroupEv)
     async def on_joined_group(wa_client: NewAClient, event: JoinedGroupEv) -> None:
