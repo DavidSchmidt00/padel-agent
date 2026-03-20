@@ -879,6 +879,7 @@ def main() -> None:
                     else "Entschuldigung, da ist etwas schiefgelaufen. Bitte versuche es nochmal. 🙏"
                 )
                 await wa_client.send_message(sender_jid, msg)
+                WA_RESPONSE_TIME.observe(time.perf_counter() - _msg_t0)
                 return
 
             # Profile updates were applied in-place by the WA update_user_profile tool
