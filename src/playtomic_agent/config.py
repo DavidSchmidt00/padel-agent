@@ -133,6 +133,11 @@ class Settings(BaseSettings):
         alias="WHATSAPP_WEBHOOK_URL",
         description="URL to Ping when a web vote reaches consensus.",
     )
+    votes_db_path: str = Field(
+        default="data/votes.db",
+        alias="VOTES_DB_PATH",
+        description="Path to the SQLite DB storing vote sessions (mount a Railway volume here to persist across deploys)",
+    )
     vote_link_poll_threshold: int = Field(
         default=3,
         alias="VOTE_LINK_POLL_THRESHOLD",
