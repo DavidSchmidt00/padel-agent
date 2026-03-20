@@ -421,8 +421,6 @@ async def search_slots(req: SearchRequest):
         raise HTTPException(status_code=422, detail="Invalid date format. Use YYYY-MM-DD.") from exc
     if d_to < d_from:
         raise HTTPException(status_code=422, detail="date_to must be >= date_from.")
-    if (d_to - d_from).days > 13:
-        raise HTTPException(status_code=422, detail="Date range must not exceed 14 days.")
     if not req.time_windows:
         raise HTTPException(status_code=422, detail="At least one time_window is required.")
 
