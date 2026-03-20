@@ -557,6 +557,16 @@ def main() -> None:
             logger.warning("Disconnected during pairing (login timeout) — restarting to retry")
             os._exit(1)
 
+    async def _pairing_watchdog(timeout_seconds: int = 240) -> None:
+        """Exit if authentication hasn't completed within timeout_seconds after pairing."""
+        await asyncio.sleep(timeout_seconds)
+        if not _ready:
+            logger.warning(
+                "Pairing code not used within %ds — restarting to generate a fresh code",
+                timeout_seconds,
+            )
+            os._exit(1)
+
     @client.event(OfflineSyncCompletedEv)
     async def on_offline_sync_completed(
         wa_client: NewAClient, event: OfflineSyncCompletedEv
@@ -641,8 +651,10 @@ def main() -> None:
             logger.info("PAIRING CODE: %s", code)
             logger.info("On your phone: WhatsApp → Linked Devices → Link with phone number")
             logger.info("=" * 50)
+            asyncio.ensure_future(_pairing_watchdog())
         except Exception:
             logger.exception("PairPhone failed — cannot generate pairing code")
+            os._exit(1)
 
     @client.event(JoinedGroupEv)
     async def on_joined_group(wa_client: NewAClient, event: JoinedGroupEv) -> None:
