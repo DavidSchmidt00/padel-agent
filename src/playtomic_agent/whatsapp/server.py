@@ -629,7 +629,7 @@ def main() -> None:
             settings.whatsapp_phone_number,
         )
         try:
-            code = wa_client.PairPhone(settings.whatsapp_phone_number, True)
+            code = await wa_client.PairPhone(settings.whatsapp_phone_number, True)
             logger.info("=" * 50)
             logger.info("PAIRING CODE: %s", code)
             logger.info("On your phone: WhatsApp → Linked Devices → Link with phone number")
