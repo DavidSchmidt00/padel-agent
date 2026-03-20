@@ -377,7 +377,6 @@ export default function FindMode({ region, profile }) {
                   type="date"
                   value={dateTo}
                   min={dateFrom}
-
                   onChange={(e) => setDateTo(e.target.value)}
                   required
                 />
