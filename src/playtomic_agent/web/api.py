@@ -5,6 +5,7 @@ import os
 from collections import defaultdict
 from datetime import date as _date
 from datetime import timedelta
+from pathlib import Path
 from typing import Literal
 from zoneinfo import ZoneInfo
 
@@ -46,7 +47,7 @@ _vote_store: VoteStore | None = None
 def _get_vote_store() -> VoteStore:
     global _vote_store
     if _vote_store is None:
-        _vote_store = VoteStore()
+        _vote_store = VoteStore(db_path=Path(get_settings().votes_db_path))
     return _vote_store
 
 
