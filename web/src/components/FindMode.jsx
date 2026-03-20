@@ -345,6 +345,7 @@ export default function FindMode({ region, profile }) {
               {[
                 { label: t('findMode.next_7_days', { defaultValue: 'Next 7 days' }), days: 6 },
                 { label: t('findMode.next_2_weeks', { defaultValue: 'Next 2 weeks' }), days: 13 },
+                { label: t('findMode.next_month', { defaultValue: 'Next month' }), days: 29 },
               ].map(({ label, days }) => {
                 const today = todayStr()
                 const end = addDays(today, days)
@@ -376,7 +377,7 @@ export default function FindMode({ region, profile }) {
                   type="date"
                   value={dateTo}
                   min={dateFrom}
-                  max={addDays(dateFrom, 13)}
+
                   onChange={(e) => setDateTo(e.target.value)}
                   required
                 />

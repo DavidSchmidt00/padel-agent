@@ -165,14 +165,6 @@ def test_search_api_error():
     assert res.status_code == 502
 
 
-def test_search_date_range_too_large():
-    """Date range > 14 days → 422, no mock needed."""
-    body = {**_BASE_SEARCH_BODY, "date_from": "2026-03-01", "date_to": "2026-03-20"}
-    res = client.post("/api/search", json=body)
-    assert res.status_code == 422
-    assert "14 days" in res.json()["detail"]
-
-
 def test_search_date_to_before_date_from():
     """date_to < date_from → 422."""
     body = {**_BASE_SEARCH_BODY, "date_from": "2026-03-10", "date_to": "2026-03-09"}
