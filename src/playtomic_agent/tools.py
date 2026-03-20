@@ -90,6 +90,7 @@ def find_slots(
     except Exception as exc:
         import logging
 
+        SLOT_SEARCH_OUTCOMES.labels(outcome="not_found").inc()
         logging.exception(f"find_slots failed: {exc}")
         return {"count": 0, "slots": [], "error": str(exc)}
 
