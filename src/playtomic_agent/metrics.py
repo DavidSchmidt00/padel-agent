@@ -21,6 +21,14 @@ WA_MESSAGES = Counter(
     "whatsapp_messages_processed",
     "WhatsApp messages passed to the agent",
 )
+WEB_MESSAGES = Counter(
+    "web_messages_processed",
+    "Web chat messages passed to the agent",
+)
+WEB_PAGE_VIEWS = Counter(
+    "web_page_views",
+    "Web page opens (index.html served)",
+)
 
 # ── Playtomic API health ─────────────────────────────────────────────────────
 PLAYTOMIC_REQUESTS = Counter(

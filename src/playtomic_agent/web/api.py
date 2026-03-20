@@ -24,7 +24,7 @@ from playtomic_agent.client.api import PlaytomicClient
 from playtomic_agent.client.exceptions import APIError, ClubNotFoundError
 from playtomic_agent.config import get_settings
 from playtomic_agent.context import get_timezone, set_request_region
-from playtomic_agent.metrics import UsageCallbackHandler
+from playtomic_agent.metrics import WEB_MESSAGES, WEB_PAGE_VIEWS, UsageCallbackHandler
 from playtomic_agent.web.agent import create_playtomic_agent
 from playtomic_agent.web.vote_store import InvalidSlotError as _InvalidSlotError
 from playtomic_agent.web.vote_store import SessionNotFoundError as _SessionNotFoundError
@@ -245,6 +245,8 @@ async def chat(req: ChatRequest, request: Request):  # Added request param for l
     - profile_suggestion: {"key": "...", "value": "..."}
     - error: {"detail": "..."}
     """
+    WEB_MESSAGES.inc()
+
     # Prepare input
     if req.messages:
         messages = [{"role": m["role"], "content": m["content"]} for m in req.messages]
@@ -562,4 +564,5 @@ if os.path.isdir(STATIC_DIR):
         possible_file = os.path.join(STATIC_DIR, full_path)
         if os.path.isfile(possible_file):
             return FileResponse(possible_file)
+        WEB_PAGE_VIEWS.inc()
         return FileResponse(os.path.join(STATIC_DIR, "index.html"))

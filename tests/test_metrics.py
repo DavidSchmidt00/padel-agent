@@ -77,6 +77,24 @@ def test_playtomic_schema_error_counter_exists():
     assert after == before + 1.0
 
 
+def test_web_messages_counter_exists():
+    from playtomic_agent.metrics import WEB_MESSAGES
+
+    before = _get_sample_value("web_messages_processed_total")
+    WEB_MESSAGES.inc()
+    after = _get_sample_value("web_messages_processed_total")
+    assert after == before + 1.0
+
+
+def test_web_page_views_counter_exists():
+    from playtomic_agent.metrics import WEB_PAGE_VIEWS
+
+    before = _get_sample_value("web_page_views_total")
+    WEB_PAGE_VIEWS.inc()
+    after = _get_sample_value("web_page_views_total")
+    assert after == before + 1.0
+
+
 def test_llm_input_tokens_counter_exists():
     from playtomic_agent.metrics import LLM_INPUT_TOKENS
 
