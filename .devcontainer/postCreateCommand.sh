@@ -12,6 +12,7 @@ sudo chown -R vscode:vscode /home/vscode/.claude || true
 # Install Python dependencies (editable mode with dev extras)
 # run from workspace root so pyproject.toml is visible
 pip3 install -e ".[dev]"
+pip3 install mcp-grafana
 
 # Install frontend dependencies
 cd web && npm install && cd ..
@@ -22,5 +23,8 @@ pre-commit install
 # Install Railway CLI
 curl -fsSL https://railway.app/install.sh | sudo sh
 
-# Install global npm tools
-npm install -g skills @anthropic-ai/claude-code@^1
+# install claude
+curl -fsSL https://claude.ai/install.sh | bash
+
+# install skills cli
+npm install -g skills

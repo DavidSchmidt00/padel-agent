@@ -4,6 +4,7 @@ import asyncio
 import logging
 import os
 import random
+import time
 from collections import defaultdict
 from datetime import UTC, datetime
 from typing import Any
@@ -30,9 +31,11 @@ from neonize.utils.message import extract_text, get_poll_update_message
 from playtomic_agent.config import get_settings
 from playtomic_agent.log_config import setup_logging
 from playtomic_agent.metrics import (
+    WA_AGENT_ERRORS,
     WA_CONNECTED,
     WA_FAILURES,
     WA_MESSAGES,
+    WA_RESPONSE_TIME,
     UsageCallbackHandler,
     metrics_app,
 )
@@ -772,6 +775,7 @@ def main() -> None:
         user_input = _prepend_quoted_context(user_input, quoted_raw)
 
         async with user_locks[sender_id]:
+            _msg_t0 = time.perf_counter()
             if message.Info.MessageSource.IsGroup:
                 actual_sender = message.Info.MessageSource.Sender
                 logger.info(
@@ -843,12 +847,14 @@ def main() -> None:
                         await asyncio.sleep(_delay)
             except TimeoutError:
                 timed_out = True
+                WA_AGENT_ERRORS.labels(error_type="timeout").inc()
                 logger.error(
                     "Agent timed out after %ds for %s",
                     settings.agent_timeout_seconds,
                     sender_id,
                 )
             except Exception:
+                WA_AGENT_ERRORS.labels(error_type="exception").inc()
                 logger.exception("Agent failed for sender %s", sender_id)
             finally:
                 stop_typing.set()
@@ -892,6 +898,7 @@ def main() -> None:
             elif final_text:
                 await wa_client.send_message(sender_jid, final_text)
                 logger.info("Replied to %s (fallback final_text)", sender_id)
+            WA_RESPONSE_TIME.observe(time.perf_counter() - _msg_t0)
 
     async def _run() -> None:
         webhook_app.state.wa_client = client
