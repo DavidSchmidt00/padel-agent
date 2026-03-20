@@ -15,6 +15,7 @@ from fastapi import FastAPI, Request
 from neonize.aioze.client import NewAClient
 from neonize.aioze.events import (
     ConnectFailureEv,
+    DisconnectedEv,
     GroupInfoEv,
     JoinedGroupEv,
     LoggedOutEv,
@@ -549,6 +550,12 @@ def main() -> None:
             logger.info("PAIRING CODE: %s", code)
             logger.info("On your phone: WhatsApp → Linked Devices → Link with phone number")
             logger.info("=" * 50)
+
+    @client.event(DisconnectedEv)
+    async def on_disconnected(wa_client: NewAClient, event: DisconnectedEv) -> None:
+        if _pairing_triggered and not _ready:
+            logger.warning("Disconnected during pairing (login timeout) — restarting to retry")
+            os._exit(1)
 
     @client.event(OfflineSyncCompletedEv)
     async def on_offline_sync_completed(
