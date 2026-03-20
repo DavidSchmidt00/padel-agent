@@ -4,9 +4,11 @@ import pytest
 
 from playtomic_agent.web.vote_store import VoteSlot, VoteStore
 
+_FUTURE = (datetime.date.today() + datetime.timedelta(days=30)).isoformat()
+
 _SLOT_A = VoteSlot(
     slot_id="s1",
-    date="2026-03-10",
+    date=_FUTURE,
     local_time="19:00",
     court="Court A",
     court_type="DOUBLE",
@@ -16,7 +18,7 @@ _SLOT_A = VoteSlot(
 )
 _SLOT_B = VoteSlot(
     slot_id="s2",
-    date="2026-03-10",
+    date=_FUTURE,
     local_time="20:00",
     court="Court B",
     court_type="SINGLE",
