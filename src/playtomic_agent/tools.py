@@ -7,6 +7,7 @@ from langchain_core.tools import tool
 
 from playtomic_agent.client.api import PlaytomicClient
 from playtomic_agent.client.utils import create_booking_link as utils_create_booking_link
+from playtomic_agent.metrics import SLOT_SEARCH_OUTCOMES
 
 _DE_WEEKDAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
 
@@ -48,6 +49,7 @@ def find_slots(
                 duration=duration,
                 log_slots=True,
             )
+            SLOT_SEARCH_OUTCOMES.labels(outcome="found" if slots else "not_found").inc()
             if not slots:
                 return {"count": 0, "slots": []}
 

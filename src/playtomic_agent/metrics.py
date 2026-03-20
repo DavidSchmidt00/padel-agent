@@ -1,5 +1,6 @@
 """Prometheus metrics for Padel Agent."""
 
+import time
 from typing import Any
 
 from langchain_core.callbacks import BaseCallbackHandler
@@ -38,6 +39,13 @@ PLAYTOMIC_SCHEMA_ERRORS = Counter(
     "Playtomic API responses that failed Pydantic schema validation",
 )
 
+# ── Slot search outcomes ─────────────────────────────────────────────────────
+SLOT_SEARCH_OUTCOMES = Counter(
+    "slot_search_outcomes",
+    "Slot search results by outcome",
+    ["outcome"],  # found | not_found
+)
+
 # ── LLM usage ───────────────────────────────────────────────────────────────
 LLM_INPUT_TOKENS = Counter(
     "llm_input_tokens",
@@ -54,10 +62,28 @@ LLM_INVOCATIONS = Counter(
     "LLM agent invocations",
     ["channel"],
 )
+LLM_LATENCY = Histogram(
+    "llm_latency_seconds",
+    "LLM call duration from request to first response token",
+    ["channel"],
+    buckets=[0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 30.0, 60.0],
+)
 PLAYTOMIC_TOOL_CALLS = Counter(
     "playtomic_tool_calls",
     "Playtomic tool calls made by the agent",
     ["tool", "channel"],
+)
+
+# ── WhatsApp agent performance ────────────────────────────────────────────────
+WA_RESPONSE_TIME = Histogram(
+    "wa_response_time_seconds",
+    "Time from receiving a WhatsApp message to sending the reply",
+    buckets=[1.0, 5.0, 10.0, 20.0, 30.0, 60.0, 120.0],
+)
+WA_AGENT_ERRORS = Counter(
+    "wa_agent_errors",
+    "WhatsApp agent invocation errors",
+    ["error_type"],  # timeout | exception
 )
 
 _PLAYTOMIC_TOOLS = frozenset(
@@ -76,8 +102,20 @@ class UsageCallbackHandler(BaseCallbackHandler):
     def __init__(self, channel: str) -> None:
         super().__init__()
         self._channel = channel
+        self._llm_start: dict[object, float] = {}
+
+    def on_llm_start(
+        self, serialized: dict[str, Any], prompts: list[str], **kwargs: object
+    ) -> None:
+        run_id = kwargs.get("run_id")
+        if run_id is not None:
+            self._llm_start[run_id] = time.perf_counter()
 
     def on_llm_end(self, response: Any, **kwargs: object) -> None:
+        run_id = kwargs.get("run_id")
+        start = self._llm_start.pop(run_id, None) if run_id is not None else None
+        if start is not None:
+            LLM_LATENCY.labels(channel=self._channel).observe(time.perf_counter() - start)
         LLM_INVOCATIONS.labels(channel=self._channel).inc()
         try:
             usage = response.generations[0][0].message.usage_metadata
