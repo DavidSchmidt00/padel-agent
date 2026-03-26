@@ -493,10 +493,13 @@ async def search_slots(req: SearchRequest):
 
 
 @app.post("/api/votes", status_code=201)
-async def create_vote_session(req: CreateVoteRequest):
+async def create_vote_session(req: CreateVoteRequest, request: Request):
     """Create a shareable vote session from selected FindMode results."""
     vote_id = _get_vote_store().create(req.slots, metadata=req.metadata)
-    VOTES_CREATED.labels(channel="web").inc()
+    # Skip web increment when called internally by the WhatsApp server — it
+    # increments channel=whatsapp itself to avoid double-counting.
+    if request.headers.get("X-Internal-Channel") != "whatsapp":
+        VOTES_CREATED.labels(channel="web").inc()
     return {"vote_id": vote_id, "url": f"/vote/{vote_id}"}
 
 

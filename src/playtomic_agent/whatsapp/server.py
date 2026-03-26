@@ -476,6 +476,7 @@ async def _dispatch_wa_response(
                 requests.post,
                 f"{get_settings().web_api_url}/api/votes",
                 json=payload,
+                headers={"X-Internal-Channel": "whatsapp"},
                 timeout=10,
             )
             resp.raise_for_status()
