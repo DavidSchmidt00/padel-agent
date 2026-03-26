@@ -31,6 +31,7 @@ from neonize.utils.message import extract_text, get_poll_update_message
 from playtomic_agent.config import get_settings
 from playtomic_agent.log_config import setup_logging
 from playtomic_agent.metrics import (
+    VOTES_CREATED,
     WA_AGENT_ERRORS,
     WA_CONNECTED,
     WA_FAILURES,
@@ -448,6 +449,7 @@ async def _dispatch_wa_response(
                 ],
             }
             user_state.poll_count += 1
+            VOTES_CREATED.labels(channel="whatsapp").inc()
             storage.save(sender_id, user_state)
             logger.info(
                 "Poll sent to group %s (%d options, id=%s)",
@@ -497,6 +499,7 @@ async def _dispatch_wa_response(
             vote_msg = f"🗳️ *{vl.question}*\n\nHier abstimmen:\n{vote_url}"
             await _send_text(wa_client, sender_jid, vote_msg)
             user_state.poll_count += 1
+            VOTES_CREATED.labels(channel="whatsapp").inc()
             storage.save(sender_id, user_state)
             logger.info(
                 "Vote link created via Web API and sent to %s (vote_id=%s)",

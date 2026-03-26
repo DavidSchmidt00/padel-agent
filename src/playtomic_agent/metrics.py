@@ -82,6 +82,13 @@ PLAYTOMIC_TOOL_CALLS = Counter(
     ["tool", "channel"],
 )
 
+# ── Votes ────────────────────────────────────────────────────────────────────
+VOTES_CREATED = Counter(
+    "votes_created",
+    "Vote sessions created (web) or polls/vote-links dispatched (whatsapp)",
+    ["channel"],  # web | whatsapp
+)
+
 # ── WhatsApp agent performance ────────────────────────────────────────────────
 WA_RESPONSE_TIME = Histogram(
     "wa_response_time_seconds",

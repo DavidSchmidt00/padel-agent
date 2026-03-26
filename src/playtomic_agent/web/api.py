@@ -24,7 +24,12 @@ from playtomic_agent.client.api import PlaytomicClient
 from playtomic_agent.client.exceptions import APIError, ClubNotFoundError
 from playtomic_agent.config import get_settings
 from playtomic_agent.context import get_timezone, set_request_region
-from playtomic_agent.metrics import WEB_MESSAGES, WEB_PAGE_VIEWS, UsageCallbackHandler
+from playtomic_agent.metrics import (
+    VOTES_CREATED,
+    WEB_MESSAGES,
+    WEB_PAGE_VIEWS,
+    UsageCallbackHandler,
+)
 from playtomic_agent.web.agent import create_playtomic_agent
 from playtomic_agent.web.vote_store import InvalidSlotError as _InvalidSlotError
 from playtomic_agent.web.vote_store import SessionNotFoundError as _SessionNotFoundError
@@ -491,6 +496,7 @@ async def search_slots(req: SearchRequest):
 async def create_vote_session(req: CreateVoteRequest):
     """Create a shareable vote session from selected FindMode results."""
     vote_id = _get_vote_store().create(req.slots, metadata=req.metadata)
+    VOTES_CREATED.labels(channel="web").inc()
     return {"vote_id": vote_id, "url": f"/vote/{vote_id}"}
 
 
