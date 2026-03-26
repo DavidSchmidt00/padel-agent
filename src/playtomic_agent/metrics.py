@@ -88,6 +88,10 @@ VOTES_CREATED = Counter(
     "Vote sessions created (web) or polls/vote-links dispatched (whatsapp)",
     ["channel"],  # web | whatsapp
 )
+# Pre-initialize both label combinations so Prometheus scrapes a 0 baseline
+# before the first event — required for increase() to work correctly.
+VOTES_CREATED.labels(channel="web")
+VOTES_CREATED.labels(channel="whatsapp")
 
 # ── WhatsApp agent performance ────────────────────────────────────────────────
 WA_RESPONSE_TIME = Histogram(
