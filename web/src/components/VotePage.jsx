@@ -7,10 +7,10 @@ function formatDate(iso) {
   return `${d}.${m}`
 }
 
-// Get short weekday name from ISO date (yyyy-mm-dd)
-function weekday(iso) {
+// Get short weekday name from ISO date (yyyy-mm-dd) in the given locale
+function weekday(iso, locale) {
   const [y, m, d] = iso.split('-').map(Number)
-  return new Date(y, m - 1, d).toLocaleDateString('en', { weekday: 'short' })
+  return new Date(y, m - 1, d).toLocaleDateString(locale, { weekday: 'short' })
 }
 
 // Court-type-aware consensus threshold
@@ -19,7 +19,7 @@ function threshold(courtType) {
 }
 
 export default function VotePage({ voteId }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
@@ -163,7 +163,7 @@ export default function VotePage({ voteId }) {
                   fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase',
                   letterSpacing: '0.05em', padding: '1px 6px', borderRadius: '4px',
                   background: 'rgba(6,182,212,0.15)', color: 'var(--accent)', whiteSpace: 'nowrap',
-                }}>{weekday(slot.date)}</span>
+                }}>{weekday(slot.date, i18n.language)}</span>
                 <span className="find-slot-time">{formatDate(slot.date)} {slot.local_time}</span>
                 <span className="find-slot-court" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '200px' }}>{slot.court}</span>
                 <span className="find-slot-meta">{slot.duration} min</span>

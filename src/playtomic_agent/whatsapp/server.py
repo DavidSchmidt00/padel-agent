@@ -412,7 +412,9 @@ async def _dispatch_wa_response(
 
     # Warn when the agent omitted a poll/vote_link in a group context — this is the most
     # common failure mode (LLM generates text describing a link but never sets the field).
-    if response.poll is None and response.vote_link is None:
+    # Only warn when text_parts is present; a single-slot response legitimately uses
+    # text_parts only (see respond tool docstring) and must not produce spurious warnings.
+    if response.poll is None and response.vote_link is None and response.text_parts:
         logger.warning(
             "Group response for %s has no poll or vote_link — LLM may have omitted it",
             sender_id,
