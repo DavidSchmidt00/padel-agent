@@ -72,7 +72,7 @@ LLM_INVOCATIONS = Counter(
 )
 LLM_LATENCY = Histogram(
     "llm_latency_seconds",
-    "LLM call duration from request to first response token",
+    "LLM call duration from request to full response received",
     ["channel"],
     buckets=[0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 30.0, 60.0],
 )

@@ -1,10 +1,16 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 
-// Format ISO date (yyyy-mm-dd) as dd.mm.yyyy
+// Format ISO date (yyyy-mm-dd) as dd.mm (no year)
 function formatDate(iso) {
-  const [y, m, d] = iso.split('-')
-  return `${d}.${m}.${y}`
+  const [, m, d] = iso.split('-')
+  return `${d}.${m}`
+}
+
+// Get short weekday name from ISO date (yyyy-mm-dd) in the given locale
+function weekday(iso, locale) {
+  const [y, m, d] = iso.split('-').map(Number)
+  return new Date(y, m - 1, d).toLocaleDateString(locale, { weekday: 'short' })
 }
 
 // Court-type-aware consensus threshold
@@ -13,7 +19,7 @@ function threshold(courtType) {
 }
 
 export default function VotePage({ voteId }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
@@ -153,10 +159,14 @@ export default function VotePage({ voteId }) {
             >
               {/* Slot header */}
               <div style={{ display: 'flex', width: '100%', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <span style={{
+                  fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase',
+                  letterSpacing: '0.05em', padding: '1px 6px', borderRadius: '4px',
+                  background: 'rgba(6,182,212,0.15)', color: 'var(--accent)', whiteSpace: 'nowrap',
+                }}>{weekday(slot.date, i18n.language)}</span>
                 <span className="find-slot-time">{formatDate(slot.date)} {slot.local_time}</span>
                 <span className="find-slot-court" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '200px' }}>{slot.court}</span>
                 <span className="find-slot-meta">{slot.duration} min</span>
-                <span className="find-slot-price">{slot.price}</span>
                 <span style={{ marginLeft: 'auto', position: 'relative' }}>
                   <button
                     onClick={() => slotAttendees.length > 0 && setOpenPopover(openPopover === slot.slot_id ? null : slot.slot_id)}
