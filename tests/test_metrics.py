@@ -111,3 +111,14 @@ def test_llm_output_tokens_counter_exists():
     LLM_OUTPUT_TOKENS.labels(channel="whatsapp").inc(50)
     after = _get_sample_value("llm_output_tokens_total", {"channel": "whatsapp"})
     assert after == before + 50.0
+
+
+def test_votes_created_counter_exists():
+    from playtomic_agent.metrics import VOTES_CREATED
+
+    before_web = _get_sample_value("votes_created_total", {"channel": "web"})
+    before_wa = _get_sample_value("votes_created_total", {"channel": "whatsapp"})
+    VOTES_CREATED.labels(channel="web").inc()
+    VOTES_CREATED.labels(channel="whatsapp").inc()
+    assert _get_sample_value("votes_created_total", {"channel": "web"}) == before_web + 1.0
+    assert _get_sample_value("votes_created_total", {"channel": "whatsapp"}) == before_wa + 1.0
