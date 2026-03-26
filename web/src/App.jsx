@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import Chat from './components/Chat'
 import FindMode from './components/FindMode'
 import VotePage from './components/VotePage'
-import RegionSelector from './components/RegionSelector'
+import SettingsMenu from './components/SettingsMenu'
 import useRegion from './hooks/useRegion'
 import useProfile from './hooks/useProfile'
 
@@ -73,17 +73,12 @@ export default function App() {
           </button>
         </div>
         <div className="header-controls">
-          <RegionSelector region={region} onRegionChange={setRegionId} />
-          <button
-            className="theme-toggle"
-            onClick={toggleTheme}
-            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-          >
-            <span className="theme-toggle-thumb">
-              {theme === 'dark' ? '🌙' : '☀️'}
-            </span>
-          </button>
+          <SettingsMenu
+            region={region}
+            onRegionChange={setRegionId}
+            theme={theme}
+            onThemeToggle={toggleTheme}
+          />
         </div>
       </header>
       <main>
