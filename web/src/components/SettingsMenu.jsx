@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { REGIONS } from '../regions'
 
 export default function SettingsMenu({ region, onRegionChange, theme, onThemeToggle }) {
     const [open, setOpen] = useState(false)
     const ref = useRef(null)
+    const { t } = useTranslation()
 
     useEffect(() => {
         function handleClickOutside(e) {
@@ -21,6 +23,7 @@ export default function SettingsMenu({ region, onRegionChange, theme, onThemeTog
                 className="settings-toggle"
                 onClick={() => setOpen((prev) => !prev)}
                 aria-label="Open settings"
+                aria-expanded={open}
                 title="Settings"
             >
                 ⋮
@@ -28,7 +31,7 @@ export default function SettingsMenu({ region, onRegionChange, theme, onThemeTog
             {open && (
                 <div className="settings-dropdown">
                     <div className="settings-section">
-                        <div className="settings-section-label">Region</div>
+                        <div className="settings-section-label">{t('region.label')}</div>
                         <div className="settings-region-options">
                             {REGIONS.map((r) => (
                                 <button
@@ -46,7 +49,7 @@ export default function SettingsMenu({ region, onRegionChange, theme, onThemeTog
                         </div>
                     </div>
                     <div className="settings-section">
-                        <div className="settings-section-label">Theme</div>
+                        <div className="settings-section-label">{t('settings.theme')}</div>
                         <div className="settings-theme-row">
                             <button
                                 className="theme-toggle"

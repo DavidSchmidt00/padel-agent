@@ -45,6 +45,9 @@
     "region": {
         "label": "Region"
     },
+    "settings": {
+        "theme": "Design"
+    },
     "findMode": {
         "club_label": "Club",
         "club_placeholder": "Club suchen...",
