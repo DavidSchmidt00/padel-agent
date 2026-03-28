@@ -46,7 +46,20 @@
         "label": "Region"
     },
     "settings": {
-        "theme": "Design"
+        "title": "Einstellungen",
+        "open_label": "Einstellungen öffnen",
+        "region": "Region",
+        "select_region": "Region auswählen",
+        "theme": "Design",
+        "dark_mode": "Dunkler Modus",
+        "light_mode": "Heller Modus",
+        "switch_to_dark": "Zu dunklem Modus wechseln",
+        "switch_to_light": "Zu hellem Modus wechseln",
+        "account": "Konto",
+        "guest": "Gast",
+        "sign_in_soon": "Anmeldung kommt bald",
+        "about": "Über uns",
+        "imprint": "Impressum"
     },
     "findMode": {
         "club_label": "Club",

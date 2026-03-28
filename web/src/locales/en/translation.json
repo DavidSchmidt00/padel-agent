@@ -46,7 +46,20 @@
         "label": "Region"
     },
     "settings": {
-        "theme": "Theme"
+        "title": "Settings",
+        "open_label": "Open settings",
+        "region": "Region",
+        "select_region": "Select region",
+        "theme": "Theme",
+        "dark_mode": "Dark mode",
+        "light_mode": "Light mode",
+        "switch_to_dark": "Switch to dark mode",
+        "switch_to_light": "Switch to light mode",
+        "account": "Account",
+        "guest": "Guest",
+        "sign_in_soon": "Sign in coming soon",
+        "about": "About",
+        "imprint": "Imprint"
     },
     "findMode": {
         "club_label": "Club",

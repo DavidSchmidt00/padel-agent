@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { REGIONS } from '../regions'
 
 export default function SettingsMenu({ region, onRegionChange, theme, onThemeToggle }) {
+    const { t } = useTranslation()
     const [open, setOpen] = useState(false)
     const [regionOpen, setRegionOpen] = useState(false)
     const ref = useRef(null)
@@ -28,9 +30,9 @@ export default function SettingsMenu({ region, onRegionChange, theme, onThemeTog
             <button
                 className="settings-toggle"
                 onClick={() => { setOpen((prev) => !prev); setRegionOpen(false) }}
-                aria-label="Open settings"
+                aria-label={t('settings.open_label')}
                 aria-expanded={open}
-                title="Settings"
+                title={t('settings.title')}
             >
                 ⚙️
             </button>
@@ -40,13 +42,13 @@ export default function SettingsMenu({ region, onRegionChange, theme, onThemeTog
 
                     {/* ── Settings ── */}
                     <div className="settings-section">
-                        <div className="settings-section-label">Settings</div>
+                        <div className="settings-section-label">{t('settings.title')}</div>
 
-                        <div className="settings-sub-label">Region</div>
+                        <div className="settings-sub-label">{t('settings.region')}</div>
                         <button
                             className="settings-region-selector"
                             onClick={() => setRegionOpen((prev) => !prev)}
-                            aria-label="Select region"
+                            aria-label={t('settings.select_region')}
                             aria-expanded={regionOpen}
                         >
                             <span>{region.label}</span>
@@ -67,39 +69,39 @@ export default function SettingsMenu({ region, onRegionChange, theme, onThemeTog
                             </div>
                         )}
 
-                        <div className="settings-sub-label" style={{ marginTop: '0.75rem' }}>Theme</div>
+                        <div className="settings-sub-label" style={{ marginTop: '0.75rem' }}>{t('settings.theme')}</div>
                         <div className="settings-theme-row">
                             <button
                                 className="theme-toggle"
                                 onClick={onThemeToggle}
-                                aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                                aria-label={t(theme === 'dark' ? 'settings.switch_to_light' : 'settings.switch_to_dark')}
                             >
                                 <span className="theme-toggle-thumb">
                                     {theme === 'dark' ? '🌙' : '☀️'}
                                 </span>
                             </button>
                             <span className="settings-theme-label">
-                                {theme === 'dark' ? 'Dark mode' : 'Light mode'}
+                                {t(theme === 'dark' ? 'settings.dark_mode' : 'settings.light_mode')}
                             </span>
                         </div>
                     </div>
 
                     {/* ── Account ── */}
                     <div className="settings-section">
-                        <div className="settings-section-label">Account</div>
+                        <div className="settings-section-label">{t('settings.account')}</div>
                         <div className="settings-account-row">
                             <div className="settings-account-avatar">👤</div>
                             <div>
-                                <div className="settings-account-name">Guest</div>
-                                <div className="settings-account-sub">Sign in coming soon</div>
+                                <div className="settings-account-name">{t('settings.guest')}</div>
+                                <div className="settings-account-sub">{t('settings.sign_in_soon')}</div>
                             </div>
                         </div>
                     </div>
 
                     {/* ── Links ── */}
                     <div className="settings-section">
-                        <button className="settings-link-row" disabled>About</button>
-                        <button className="settings-link-row" disabled>Imprint</button>
+                        <button className="settings-link-row" disabled>{t('settings.about')}</button>
+                        <button className="settings-link-row" disabled>{t('settings.imprint')}</button>
                     </div>
 
                 </div>
