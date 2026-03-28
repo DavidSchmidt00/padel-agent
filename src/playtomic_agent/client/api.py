@@ -329,6 +329,7 @@ class PlaytomicClient:
                     )
                     available_slots.append(slot)
                 except (KeyError, ValueError) as e:
+                    PLAYTOMIC_SCHEMA_ERRORS.inc()
                     logger.warning(f"Skipping invalid slot data: {e}")
                     continue
 

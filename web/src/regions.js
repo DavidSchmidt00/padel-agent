@@ -3,8 +3,8 @@
  * Add new regions here to expand the selector.
  */
 export const REGIONS = [
-    { id: 'global', label: '🌍 Global', language: 'en', country: null, timezone: 'UTC' },
-    { id: 'de', label: '🇩🇪 Germany', language: 'de', country: 'DE', timezone: 'Europe/Berlin' },
+    { id: 'global', label: '🌍 Global', language: 'en', languageLabel: 'English', country: null, timezone: 'UTC' },
+    { id: 'de', label: '🇩🇪 Germany', language: 'de', languageLabel: 'Deutsch', country: 'DE', timezone: 'Europe/Berlin' },
 ]
 
 export const DEFAULT_REGION_ID = 'de'

@@ -280,6 +280,171 @@ body {
   font-weight: 600;
 }
 
+/* ─── Settings Menu ─── */
+.settings-menu { position: relative; }
+
+.settings-toggle {
+  background: var(--bg-input);
+  border: 1.5px solid var(--border-input);
+  border-radius: 8px;
+  padding: 0.4rem 0.6rem;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color var(--transition-speed);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.1rem;
+}
+.settings-toggle:hover { border-color: var(--accent); }
+
+.settings-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-card);
+  z-index: 100;
+  min-width: 220px;
+  animation: fadeSlideIn 0.15s ease-out;
+  overflow: hidden;
+}
+
+.settings-section { padding: 0.65rem 0.85rem; }
+.settings-section + .settings-section { border-top: 1px solid var(--border-color); }
+
+.settings-section-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+  margin-bottom: 0.6rem;
+}
+
+.settings-sub-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 0.3rem;
+}
+
+/* Region selector — closed row */
+.settings-region-selector {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-input);
+  border: 1.5px solid var(--border-input);
+  border-radius: 7px;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.82rem;
+  font-family: inherit;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.settings-region-selector:hover { border-color: var(--accent); }
+.settings-region-caret { font-size: 0.65rem; color: var(--text-muted); }
+
+/* Region selector — open list */
+.settings-region-list {
+  margin-top: 0.3rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-height: 180px;
+}
+
+.settings-region-list-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.82rem;
+  font-family: inherit;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.12s;
+  text-align: left;
+}
+.settings-region-list-item:hover { background: var(--accent-subtle); }
+.settings-region-list-item.active {
+  color: var(--accent);
+  font-weight: 600;
+  background: var(--accent-subtle);
+}
+.settings-region-lang {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+.settings-region-list-item.active .settings-region-lang {
+  color: var(--accent);
+  opacity: 0.7;
+}
+
+/* Theme row */
+.settings-theme-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.settings-theme-label {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+/* Account row */
+.settings-account-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  opacity: 0.45;
+}
+.settings-account-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg-input);
+  border: 1.5px solid var(--border-input);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+.settings-account-name {
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+.settings-account-sub {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+/* Link rows */
+.settings-link-row {
+  display: block;
+  width: 100%;
+  padding: 0.3rem 0;
+  background: transparent;
+  border: none;
+  font-size: 0.82rem;
+  font-family: inherit;
+  color: var(--text-muted);
+  text-align: left;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 /* ═══════════════════════════════════════════════════════
    Chat Container & Box
    ═══════════════════════════════════════════════════════ */
