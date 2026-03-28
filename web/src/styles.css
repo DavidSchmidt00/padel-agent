@@ -355,9 +355,9 @@ body {
   margin-top: 0.3rem;
   border: 1px solid var(--border-color);
   border-radius: 6px;
-  overflow: hidden;
-  max-height: 180px;
+  overflow-x: hidden;
   overflow-y: auto;
+  max-height: 180px;
 }
 
 .settings-region-list-item {
