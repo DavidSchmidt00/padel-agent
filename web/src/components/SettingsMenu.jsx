@@ -46,6 +46,7 @@ export default function SettingsMenu({ region, onRegionChange, theme, onThemeTog
                         <button
                             className="settings-region-selector"
                             onClick={() => setRegionOpen((prev) => !prev)}
+                            aria-label="Select region"
                             aria-expanded={regionOpen}
                         >
                             <span>{region.label}</span>
