@@ -290,6 +290,37 @@ def test_clubs_api_error_returns_502():
     assert res.status_code == 502
 
 
+def test_find_handoff_sse_event():
+    """When agent calls handoff_to_find, api should emit a find_handoff SSE event."""
+
+    class ToolCallMsg:
+        tool_calls = [
+            {
+                "name": "handoff_to_find",
+                "args": {
+                    "club_slug": "lemon-padel-club",
+                    "date_from": "2026-04-05",
+                    "date_to": "2026-04-06",
+                },
+            }
+        ]
+        tool_call_id = None
+        type = "ai"
+        content = ""
+
+    async def fake_astream(input_data, *args, **kwargs):
+        yield {"model": {"messages": [ToolCallMsg()]}}
+
+    mock_agent = MagicMock()
+    mock_agent.astream = fake_astream
+
+    with patch("playtomic_agent.web.api.create_playtomic_agent", return_value=mock_agent):
+        res = client.post("/api/chat", json={"prompt": "find slots"})
+        assert res.status_code == 200
+        assert '"type": "find_handoff"' in res.text
+        assert '"club_slug": "lemon-padel-club"' in res.text
+
+
 def test_metrics_endpoint_returns_200():
     resp = client.get("/metrics")
     assert resp.status_code == 200

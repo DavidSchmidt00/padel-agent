@@ -321,6 +321,19 @@ async def chat(req: ChatRequest, request: Request):  # Added request param for l
                                     except Exception as e:
                                         logging.error(f"Failed to parse suggestions: {e}")
 
+                                if tc.get("name") == "handoff_to_find":
+                                    try:
+                                        args = tc.get("args", {})
+                                        handoff_event = {
+                                            "type": "find_handoff",
+                                            "params": args,
+                                        }
+                                        yield f"data: {json.dumps(handoff_event)}\n\n"
+                                        await asyncio.sleep(0.01)
+                                        logging.info(f"Stream yielded find_handoff: {args}")
+                                    except Exception as e:
+                                        logging.error(f"Failed to emit find_handoff: {e}")
+
                         # 2. Check for Tool Output (Tool End) & Profile Updates
                         if getattr(m, "tool_call_id", None) is not None:
                             tool_name = getattr(m, "name", "unknown")
