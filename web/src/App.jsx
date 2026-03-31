@@ -3,24 +3,32 @@ import { useTranslation } from 'react-i18next'
 import Chat from './components/Chat'
 import FindMode from './components/FindMode'
 import VotePage from './components/VotePage'
+import AboutPage from './components/AboutPage'
 import SettingsMenu from './components/SettingsMenu'
 import useRegion from './hooks/useRegion'
 import useProfile from './hooks/useProfile'
+
+const LAST_ROUTE_KEY = 'padel-last-route'
+
+function modeFromPath() {
+  const p = window.location.pathname
+  if (p === '/about') return 'about'
+  if (p === '/find') return 'find'
+  if (p.startsWith('/vote/')) return 'vote'
+  if (p === '/chat') return 'chat'
+  // Root or unknown path: restore last route, or show about for first-timers
+  return localStorage.getItem(LAST_ROUTE_KEY) || 'about'
+}
+
+function voteIdFromPath() {
+  const m = window.location.pathname.match(/^\/vote\/([a-z0-9]{8})$/)
+  return m ? m[1] : null
+}
 
 export default function App() {
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem('padel-agent-theme') || 'dark'
   })
-  const modeFromPath = () => {
-    const p = window.location.pathname
-    if (p === '/find') return 'find'
-    if (p.startsWith('/vote/')) return 'vote'
-    return 'chat'
-  }
-  const voteIdFromPath = () => {
-    const m = window.location.pathname.match(/^\/vote\/([a-z0-9]{8})$/)
-    return m ? m[1] : null
-  }
   const [mode, setMode] = useState(modeFromPath)
   const [voteId, setVoteId] = useState(voteIdFromPath)
 
@@ -30,6 +38,7 @@ export default function App() {
     window.addEventListener('popstate', onPopState)
     return () => window.removeEventListener('popstate', onPopState)
   }, [])
+
   const { region, setRegionId } = useRegion()
   const { profile } = useProfile()
   const { t, i18n } = useTranslation()
@@ -51,6 +60,19 @@ export default function App() {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))
   }
 
+  // Navigate to chat or find, saving last route
+  function navigateTo(newMode) {
+    const path = newMode === 'find' ? '/find' : '/chat'
+    history.pushState(null, '', path)
+    setMode(newMode)
+    localStorage.setItem(LAST_ROUTE_KEY, path)
+  }
+
+  function navigateToAbout() {
+    history.pushState(null, '', '/about')
+    setMode('about')
+  }
+
   return (
     <div className="app-root">
       <header className="app-header">
@@ -61,13 +83,13 @@ export default function App() {
         <div className="mode-toggle-bar">
           <button
             className={`mode-btn${mode === 'chat' ? ' active' : ''}`}
-            onClick={() => { history.pushState(null, '', '/chat'); setMode('chat') }}
+            onClick={() => navigateTo('chat')}
           >
             {t('findMode.mode_chat')}
           </button>
           <button
             className={`mode-btn${mode === 'find' ? ' active' : ''}`}
-            onClick={() => { history.pushState(null, '', '/find'); setMode('find') }}
+            onClick={() => navigateTo('find')}
           >
             {t('findMode.mode_find')}
           </button>
@@ -78,6 +100,7 @@ export default function App() {
             onRegionChange={setRegionId}
             theme={theme}
             onThemeToggle={toggleTheme}
+            onNavigateAbout={navigateToAbout}
           />
         </div>
       </header>
@@ -90,6 +113,9 @@ export default function App() {
         </div>
         <div style={{ display: mode === 'vote' ? 'contents' : 'none' }}>
           {voteId && <VotePage voteId={voteId} />}
+        </div>
+        <div style={{ display: mode === 'about' ? 'contents' : 'none' }}>
+          <AboutPage onNavigate={navigateTo} />
         </div>
       </main>
     </div>
