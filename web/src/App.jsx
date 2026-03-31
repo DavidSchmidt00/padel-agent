@@ -60,7 +60,8 @@ export default function App() {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))
   }
 
-  // Navigate to chat or find, saving last route
+  // Navigate to chat or find, saving last route.
+  // Only 'chat' and 'find' are valid — 'about' and 'vote' have their own navigators.
   function navigateTo(newMode) {
     const path = newMode === 'find' ? '/find' : '/chat'
     history.pushState(null, '', path)
