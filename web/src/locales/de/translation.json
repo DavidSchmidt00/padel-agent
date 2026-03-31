@@ -61,6 +61,21 @@
         "about": "Über uns",
         "imprint": "Impressum"
     },
+    "about": {
+        "tagline": "Dein Assistent für Padel-Plätze. Beschreib einfach, was du brauchst — oder stöbere direkt.",
+        "chat_title": "Chat-Modus",
+        "chat_desc": "Sag der KI auf natürliche Sprache, was du suchst. Sie durchsucht Playtomic in Echtzeit und zeigt verfügbare Slots.",
+        "chat_cta": "Chat öffnen →",
+        "ai_badge": "✦ KI-gestützt",
+        "find_title": "Suchen-Modus",
+        "find_desc": "Durchsuche verfügbare Slots direkt mit Filtern — Standort, Datum, Dauer, Platzart. Schnell und übersichtlich.",
+        "find_cta": "Suche öffnen →",
+        "how_it_works": "So funktioniert es",
+        "step1": "Beschreib, was du suchst — Club, Datum, Uhrzeit, Dauer, Spieleranzahl",
+        "step2": "Der Agent durchsucht Playtomic in Echtzeit und zeigt verfügbare Slots",
+        "step3": "Tippe auf einen Buchungslink, um direkt auf Playtomic zu reservieren — kein Konto hier nötig",
+        "footer": "Daten von Playtomic · Nicht mit Playtomic verbunden"
+    },
     "findMode": {
         "club_label": "Club",
         "club_placeholder": "Club suchen...",

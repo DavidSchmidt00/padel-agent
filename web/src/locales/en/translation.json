@@ -61,6 +61,21 @@
         "about": "About",
         "imprint": "Imprint"
     },
+    "about": {
+        "tagline": "Your assistant for finding padel courts. Describe what you need — or browse directly.",
+        "chat_title": "Chat mode",
+        "chat_desc": "Tell the AI what you want in plain language. It searches Playtomic in real time and shows available slots.",
+        "chat_cta": "Open Chat →",
+        "ai_badge": "✦ AI-powered",
+        "find_title": "Find mode",
+        "find_desc": "Browse available slots directly with filters — location, date, duration, court type. Fast and visual.",
+        "find_cta": "Open Find →",
+        "how_it_works": "How it works",
+        "step1": "Describe what you're looking for — club, date, time, duration, number of players",
+        "step2": "The agent searches Playtomic in real time and shows available slots",
+        "step3": "Tap a booking link to reserve directly on Playtomic — no account needed here",
+        "footer": "Data from Playtomic · Not affiliated with Playtomic"
+    },
     "findMode": {
         "club_label": "Club",
         "club_placeholder": "Search for a club...",
