@@ -315,3 +315,44 @@ def suggest_next_steps(
 ) -> str:
     """Sends a list of suggestion chips to the frontend."""
     return "Suggestions sent to user."
+
+
+@tool(
+    description="Hand off a slot search to Find mode. Call this when the user wants to browse slots and you have identified the club, dates, or time preferences. All params optional — fill what you know. Resolve relative dates (e.g. 'this weekend') to ISO date strings first."
+)
+def handoff_to_find(
+    club_slug: Annotated[
+        str | None,
+        "Playtomic club slug, e.g. 'lemon-padel-club'",
+    ] = None,
+    club_name: Annotated[
+        str | None,
+        "Human-readable club name, e.g. 'Lemon Padel'",
+    ] = None,
+    date_from: Annotated[
+        str | None,
+        "Start of date range, ISO format YYYY-MM-DD",
+    ] = None,
+    date_to: Annotated[
+        str | None,
+        "End of date range, ISO format YYYY-MM-DD",
+    ] = None,
+    time_from: Annotated[
+        str | None,
+        "Start of time window, e.g. '18:00'",
+    ] = None,
+    time_to: Annotated[
+        str | None,
+        "End of time window, e.g. '22:00'",
+    ] = None,
+    duration: Annotated[
+        int | None,
+        "Slot duration in minutes: 60, 90, or 120",
+    ] = None,
+    court_type: Annotated[
+        str | None,
+        "Court type: SINGLE or DOUBLE",
+    ] = None,
+) -> dict:
+    """Signal to the frontend to open Find mode with pre-filled search params."""
+    return {"status": "handoff_ready"}
