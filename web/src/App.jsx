@@ -17,7 +17,11 @@ function modeFromPath() {
   if (p.startsWith('/vote/')) return 'vote'
   if (p === '/chat') return 'chat'
   // Root or unknown path: restore last route, or show about for first-timers
-  return localStorage.getItem(LAST_ROUTE_KEY) || 'about'
+  try {
+    return localStorage.getItem(LAST_ROUTE_KEY) || 'about'
+  } catch {
+    return 'about'
+  }
 }
 
 function voteIdFromPath() {
@@ -66,7 +70,11 @@ export default function App() {
     const path = newMode === 'find' ? '/find' : '/chat'
     history.pushState(null, '', path)
     setMode(newMode)
-    localStorage.setItem(LAST_ROUTE_KEY, path)
+    try {
+      localStorage.setItem(LAST_ROUTE_KEY, newMode)
+    } catch {
+      console.warn('[padel-agent] Could not persist last route to localStorage')
+    }
   }
 
   function navigateToAbout() {
