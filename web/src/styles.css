@@ -1275,6 +1275,21 @@ body {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+.suggestion-chip--find {
+  background: var(--accent);
+  color: var(--text-on-accent);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+.suggestion-chip--find:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  color: var(--text-on-accent);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(6, 182, 212, 0.35);
+}
+
 /* ═══════════════════════════════════════════════════════
    Mode Toggle Bar
    ═══════════════════════════════════════════════════════ */
