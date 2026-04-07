@@ -12,7 +12,7 @@ from typing import Any
 import httpx
 import requests
 import uvicorn
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from neonize.aioze.client import NewAClient
 from neonize.aioze.events import (
     ConnectFailureEv,
@@ -86,6 +86,14 @@ async def _fire_alert(*, event: str, reason: str, message: str) -> None:
 
 webhook_app = FastAPI(title="WhatsApp Webhook Receiver")
 webhook_app.mount("/metrics", metrics_app)
+
+
+@webhook_app.get("/health")
+async def health() -> Response:
+    value = next(iter(WA_CONNECTED.collect())).samples[0].value
+    if value == 1.0:
+        return Response(content="ok", status_code=200)
+    return Response(content="WhatsApp disconnected", status_code=503)
 
 
 @webhook_app.post("/api/webhook/consensus")
