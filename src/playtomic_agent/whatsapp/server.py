@@ -87,9 +87,16 @@ async def _fire_alert(*, event: str, reason: str, message: str) -> None:
 webhook_app = FastAPI(title="WhatsApp Webhook Receiver")
 webhook_app.mount("/metrics", metrics_app)
 
+# Set to True once the first successful WhatsApp sync completes.
+# The health endpoint returns 200 until then so Railway doesn't
+# kill the deployment before the connection is established.
+_wa_ever_connected: bool = False
+
 
 @webhook_app.get("/health")
 async def health() -> Response:
+    if not _wa_ever_connected:
+        return Response(content="starting", status_code=200)
     value = next(iter(WA_CONNECTED.collect())).samples[0].value
     if value == 1.0:
         return Response(content="ok", status_code=200)
@@ -597,8 +604,10 @@ def main() -> None:
     async def on_offline_sync_completed(
         wa_client: NewAClient, event: OfflineSyncCompletedEv
     ) -> None:
+        global _wa_ever_connected
         nonlocal _ready
         _ready = True
+        _wa_ever_connected = True
         logger.info("Offline sync complete — bot is now processing incoming messages")
         WA_CONNECTED.set(1)
 
