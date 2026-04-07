@@ -573,6 +573,7 @@ def main() -> None:
         if _pairing_triggered and not _ready:
             logger.warning("Disconnected during pairing (login timeout) — restarting to retry")
             os._exit(1)
+        WA_CONNECTED.set(0)
 
     async def _pairing_watchdog(timeout_seconds: int = 240) -> None:
         """Exit if authentication hasn't completed within timeout_seconds after pairing."""
