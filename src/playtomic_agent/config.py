@@ -4,7 +4,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -118,8 +118,8 @@ class Settings(BaseSettings):
     )
     whatsapp_webhook_port: int = Field(
         default=8081,
-        alias="WHATSAPP_WEBHOOK_PORT",
-        description="Port for the internal WhatsApp webhook server.",
+        validation_alias=AliasChoices("WHATSAPP_WEBHOOK_PORT", "PORT"),
+        description="Port for the internal WhatsApp webhook server (falls back to $PORT for Railway).",
     )
 
     # Web/WhatsApp Integration
