@@ -313,6 +313,7 @@ const Chat = forwardRef(({ region, onHandoffToFind }, ref) => {
             } else if (data.type === 'suggestion_chips') {
               bufferedChips = data.options || []
             } else if (data.type === 'find_handoff') {
+              if (!data.params) console.warn('[chat] find_handoff event received with no params', data)
               setPendingHandoff(data.params || {})
             } else if (data.type === 'error') {
               const errorKey = data.code ? `errors.${data.code}` : null

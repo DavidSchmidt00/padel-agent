@@ -317,8 +317,21 @@ def test_find_handoff_sse_event():
     with patch("playtomic_agent.web.api.create_playtomic_agent", return_value=mock_agent):
         res = client.post("/api/chat", json={"prompt": "find slots"})
         assert res.status_code == 200
-        assert '"type": "find_handoff"' in res.text
-        assert '"club_slug": "lemon-padel-club"' in res.text
+        handoff_lines = [
+            line
+            for line in res.text.splitlines()
+            if line.startswith("data:") and '"find_handoff"' in line
+        ]
+        assert len(handoff_lines) == 1, (
+            f"Expected exactly one find_handoff event, got: {handoff_lines}"
+        )
+        import json as _json
+
+        event = _json.loads(handoff_lines[0].removeprefix("data: "))
+        assert event["type"] == "find_handoff"
+        assert event["params"]["club_slug"] == "lemon-padel-club"
+        assert event["params"]["date_from"] == "2026-04-05"
+        assert event["params"]["date_to"] == "2026-04-06"
 
 
 def test_metrics_endpoint_returns_200():

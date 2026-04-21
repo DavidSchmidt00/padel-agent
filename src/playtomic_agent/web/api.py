@@ -322,17 +322,19 @@ async def chat(req: ChatRequest, request: Request):  # Added request param for l
                                         logging.error(f"Failed to parse suggestions: {e}")
 
                                 if tc.get("name") == "handoff_to_find":
+                                    args = tc.get("args", {})
                                     try:
-                                        args = tc.get("args", {})
-                                        handoff_event = {
-                                            "type": "find_handoff",
-                                            "params": args,
-                                        }
-                                        yield f"data: {json.dumps(handoff_event)}\n\n"
+                                        payload = json.dumps(
+                                            {"type": "find_handoff", "params": args}
+                                        )
+                                    except TypeError:
+                                        logging.exception(
+                                            "Failed to serialise find_handoff args: %r", args
+                                        )
+                                    else:
+                                        yield f"data: {payload}\n\n"
                                         await asyncio.sleep(0.01)
-                                        logging.info(f"Stream yielded find_handoff: {args}")
-                                    except Exception as e:
-                                        logging.error(f"Failed to emit find_handoff: {e}")
+                                        logging.info("Stream yielded find_handoff: %r", args)
 
                         # 2. Check for Tool Output (Tool End) & Profile Updates
                         if getattr(m, "tool_call_id", None) is not None:

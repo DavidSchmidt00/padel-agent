@@ -1,6 +1,7 @@
 """Tests for playtomic_agent.tools module."""
 
 from playtomic_agent.tools import handoff_to_find
+from playtomic_agent.whatsapp.agent import WA_TOOLS
 
 
 def test_handoff_to_find_returns_status():
@@ -24,3 +25,8 @@ def test_handoff_to_find_all_optional():
     """Test handoff_to_find with no parameters (all optional)."""
     result = handoff_to_find.invoke({})
     assert result == {"status": "handoff_ready"}
+
+
+def test_handoff_to_find_not_in_wa_tools():
+    """handoff_to_find must stay out of WA_TOOLS — WhatsApp has no frontend to receive the event."""
+    assert handoff_to_find not in WA_TOOLS
