@@ -424,6 +424,11 @@ async def _dispatch_wa_response(
         logger.info("Replied to %s (%d message(s))", sender_id, len(parts))
 
     if not is_group:
+        if response.poll is not None or response.vote_link is not None:
+            logger.warning(
+                "DM response for %s has poll/vote_link set — dropping (polls are groups-only)",
+                sender_id,
+            )
         return
 
     # Warn when the agent omitted a poll/vote_link in a group context — this is the most
