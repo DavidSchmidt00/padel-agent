@@ -30,7 +30,7 @@ function todayStr() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-export default function FindMode({ region, profile }) {
+export default function FindMode({ region, profile, initialParams, onParamsConsumed }) {
   const { t, i18n } = useTranslation()
 
   const [clubName, setClubName] = useState(profile?.preferred_club_name || '')
@@ -67,6 +67,20 @@ export default function FindMode({ region, profile }) {
       presetInputRef.current.focus()
     }
   }, [showSavePreset])
+
+  useEffect(() => {
+    if (!initialParams) return
+    if (initialParams.club_name) setClubName(initialParams.club_name)
+    if (initialParams.club_slug) setClubSlug(initialParams.club_slug)
+    if (initialParams.date_from) setDateFrom(initialParams.date_from)
+    if (initialParams.date_to) setDateTo(initialParams.date_to)
+    if (initialParams.duration) setDuration(String(initialParams.duration))
+    if (initialParams.court_type) setCourtType(initialParams.court_type)
+    if (initialParams.time_from && initialParams.time_to) {
+      setWindows([{ days: [0, 1, 2, 3, 4, 5, 6], start: initialParams.time_from, end: initialParams.time_to }])
+    }
+    onParamsConsumed?.()
+  }, [initialParams, onParamsConsumed])
   function handleSavePreset() {
     if (!newPresetName.trim()) return
     const today = new Date(todayStr() + 'T12:00:00')
