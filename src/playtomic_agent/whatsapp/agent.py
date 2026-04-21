@@ -108,8 +108,9 @@ class WAResponse(BaseModel):
     description=(
         "Emit your complete response. Call exactly once as the final step. "
         "text_parts: ordered list of sequential WhatsApp messages. "
-        "In groups with 2+ slots: set poll (below poll threshold) XOR vote_link (at/above threshold). "
-        "Never set both. Never set poll or vote_link for a single slot — use text_parts only."
+        "In GROUPS with 2+ slots: set poll (below poll threshold) XOR vote_link (at/above threshold). "
+        "In DMs (private chats): ALWAYS use text_parts only — NEVER set poll or vote_link. "
+        "Never set both poll and vote_link. Never set poll or vote_link for a single slot."
     )
 )
 def respond(
@@ -216,6 +217,8 @@ def _build_system_prompt(
             "   If exactly 1 slot, or in a DM: put the slot in respond.text_parts with the booking link.\n"
             if is_group
             else "Put them as a numbered list in respond.text_parts.\n"
+            "   ⚠️ This is a PRIVATE CHAT (DM): NEVER set respond.poll or respond.vote_link."
+            " Always use respond.text_parts only.\n"
         )
         + "5. No slots found? -> Tell the user with a sympathetic quip and suggest a different"
         " date or time.\n\n"
