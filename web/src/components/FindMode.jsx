@@ -30,7 +30,7 @@ function todayStr() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-export default function FindMode({ region, profile }) {
+export default function FindMode({ region, profile, initialParams, onParamsConsumed }) {
   const { t, i18n } = useTranslation()
 
   const [clubName, setClubName] = useState(profile?.preferred_club_name || '')
@@ -61,12 +61,44 @@ export default function FindMode({ region, profile }) {
   const [newPresetName, setNewPresetName] = useState('')
   const [showSavePreset, setShowSavePreset] = useState(false)
   const presetInputRef = useRef(null)
+  const consumedParamsRef = useRef(null)
 
   useEffect(() => {
     if (showSavePreset && presetInputRef.current) {
       presetInputRef.current.focus()
     }
   }, [showSavePreset])
+
+  useEffect(() => {
+    if (!initialParams || consumedParamsRef.current === initialParams) return
+    consumedParamsRef.current = initialParams
+
+    if (initialParams.club_name) setClubName(initialParams.club_name)
+    if (initialParams.club_slug) setClubSlug(initialParams.club_slug)
+
+    // Ensure date range is always valid: derive missing bound, clamp if inverted
+    if (initialParams.date_from || initialParams.date_to) {
+      const resolvedFrom = initialParams.date_from ?? dateFrom
+      const resolvedTo =
+        initialParams.date_to && initialParams.date_to >= resolvedFrom
+          ? initialParams.date_to
+          : addDays(resolvedFrom, 6)
+      if (initialParams.date_from) setDateFrom(resolvedFrom)
+      setDateTo(resolvedTo)
+    }
+
+    if (initialParams.duration) setDuration(String(initialParams.duration))
+    if (initialParams.court_type) setCourtType(initialParams.court_type)
+    // Preserve existing day selection — only overwrite the time bounds
+    if (initialParams.time_from && initialParams.time_to) {
+      setWindows((prev) =>
+        prev.map((w, i) =>
+          i === 0 ? { ...w, start: initialParams.time_from, end: initialParams.time_to } : w
+        )
+      )
+    }
+    onParamsConsumed?.()
+  }, [initialParams, onParamsConsumed, dateFrom])
   function handleSavePreset() {
     if (!newPresetName.trim()) return
     const today = new Date(todayStr() + 'T12:00:00')

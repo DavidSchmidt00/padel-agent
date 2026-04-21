@@ -11,6 +11,7 @@ from playtomic_agent.tools import (
     find_clubs_by_name,
     find_slots,
     find_slots_date_range,
+    handoff_to_find,
     is_weekend,
     suggest_next_steps,
     update_user_profile,
@@ -27,6 +28,7 @@ TOOLS = [
     find_clubs_by_name,
     update_user_profile,
     suggest_next_steps,
+    handoff_to_find,
 ]
 
 
@@ -88,8 +90,8 @@ WORKFLOW:
 1. Specific club mentioned? -> `find_clubs_by_name` (use SHORT name).
 2. City/Region mentioned? -> `find_clubs_by_location`.
 3. Availability needed?
-   - Single date -> `find_slots` (club slug + date).
-   - Multiple days / date range -> `find_slots_date_range` (start_date + end_date, max 7 days).
+   - User wants to browse/explore (open-ended) -> call `handoff_to_find` with what you know (club, dates, time window). Resolve relative dates to ISO strings (YYYY-MM-DD). Do NOT call `find_slots` or `find_slots_date_range`. Do NOT send a follow-up message after calling `handoff_to_find`.
+   - User wants a direct answer now (e.g. "just tell me what's free at 18:00") -> `find_slots` (single date) or `find_slots_date_range` (start_date + end_date, max 7 days).
 4. Results found (>0 slots)? -> Show top 5 slots. Ask to see more if needed.
    - Format: **HH:MM** - DURATION min - **PRICE** - [Book](booking_link)
    - NEVER construct links manually. Use `booking_link` from tool.

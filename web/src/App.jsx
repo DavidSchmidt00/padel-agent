@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import Chat from './components/Chat'
 import FindMode from './components/FindMode'
@@ -35,6 +35,8 @@ export default function App() {
   })
   const [mode, setMode] = useState(modeFromPath)
   const [voteId, setVoteId] = useState(voteIdFromPath)
+  const [pendingFindParams, setPendingFindParams] = useState(null)
+  const handleParamsConsumed = useCallback(() => setPendingFindParams(null), [])
 
   // Sync URL ↔ mode
   useEffect(() => {
@@ -115,10 +117,18 @@ export default function App() {
       </header>
       <main>
         <div style={{ display: mode === 'chat' ? 'contents' : 'none' }}>
-          <Chat ref={chatRef} region={region} />
+          <Chat ref={chatRef} region={region} onHandoffToFind={(params) => {
+            setPendingFindParams(params)
+            navigateTo('find')
+          }} />
         </div>
         <div style={{ display: mode === 'find' ? 'contents' : 'none' }}>
-          <FindMode region={region} profile={profile} />
+          <FindMode
+            region={region}
+            profile={profile}
+            initialParams={pendingFindParams}
+            onParamsConsumed={handleParamsConsumed}
+          />
         </div>
         <div style={{ display: mode === 'vote' ? 'contents' : 'none' }}>
           {voteId && <VotePage voteId={voteId} />}

@@ -290,6 +290,50 @@ def test_clubs_api_error_returns_502():
     assert res.status_code == 502
 
 
+def test_find_handoff_sse_event():
+    """When agent calls handoff_to_find, api should emit a find_handoff SSE event."""
+
+    class ToolCallMsg:
+        tool_calls = [
+            {
+                "name": "handoff_to_find",
+                "args": {
+                    "club_slug": "lemon-padel-club",
+                    "date_from": "2026-04-05",
+                    "date_to": "2026-04-06",
+                },
+            }
+        ]
+        tool_call_id = None
+        type = "ai"
+        content = ""
+
+    async def fake_astream(input_data, *args, **kwargs):
+        yield {"model": {"messages": [ToolCallMsg()]}}
+
+    mock_agent = MagicMock()
+    mock_agent.astream = fake_astream
+
+    with patch("playtomic_agent.web.api.create_playtomic_agent", return_value=mock_agent):
+        res = client.post("/api/chat", json={"prompt": "find slots"})
+        assert res.status_code == 200
+        handoff_lines = [
+            line
+            for line in res.text.splitlines()
+            if line.startswith("data:") and '"find_handoff"' in line
+        ]
+        assert len(handoff_lines) == 1, (
+            f"Expected exactly one find_handoff event, got: {handoff_lines}"
+        )
+        import json as _json
+
+        event = _json.loads(handoff_lines[0].removeprefix("data: "))
+        assert event["type"] == "find_handoff"
+        assert event["params"]["club_slug"] == "lemon-padel-club"
+        assert event["params"]["date_from"] == "2026-04-05"
+        assert event["params"]["date_to"] == "2026-04-06"
+
+
 def test_metrics_endpoint_returns_200():
     resp = client.get("/metrics")
     assert resp.status_code == 200

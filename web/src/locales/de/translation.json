@@ -135,6 +135,9 @@
         "error": "Abstimmung konnte nicht erstellt werden. Bitte versuche es erneut.",
         "no_slots_selected": "Wähle mindestens einen Slot aus."
     },
+    "chat": {
+        "open_in_find_mode": "Im Suchen-Modus öffnen"
+    },
     "votePage": {
         "title": "Gruppenabstimmung",
         "your_name": "Dein Name",

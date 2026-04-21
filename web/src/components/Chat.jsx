@@ -6,7 +6,7 @@ import useProfile from '../hooks/useProfile'
 import ProfileCard from './ProfileCard'
 import ProfileSuggestion from './ProfileSuggestion'
 
-const Chat = forwardRef(({ region }, ref) => {
+const Chat = forwardRef(({ region, onHandoffToFind }, ref) => {
   const { t } = useTranslation()
   const { profile, updateProfile, removePreference, clearProfile, PROFILE_LABELS } = useProfile()
 
@@ -17,6 +17,7 @@ const Chat = forwardRef(({ region }, ref) => {
   const [toolStatus, setToolStatus] = useState(null)
   const [suggestionChips, setSuggestionChips] = useState([])
   const [pendingSuggestions, setPendingSuggestions] = useState([])
+  const [pendingHandoff, setPendingHandoff] = useState(null)
   const messagesEndRef = useRef(null)
 
   const scrollToBottom = () => {
@@ -227,6 +228,7 @@ const Chat = forwardRef(({ region }, ref) => {
     setError(null)
     setToolStatus(null)
     setSuggestionChips([])
+    setPendingHandoff(null)
 
     let bufferedChips = []
 
@@ -288,7 +290,7 @@ const Chat = forwardRef(({ region }, ref) => {
 
             if (data.type === 'tool_start') {
               const toolName = data.tool || 'default'
-              const hiddenTools = ['suggest_next_steps', 'update_user_profile', 'suggest_preferred_options']
+              const hiddenTools = ['suggest_next_steps', 'update_user_profile', 'suggest_preferred_options', 'handoff_to_find']
               if (!hiddenTools.includes(toolName)) {
                 const translatedStatus = t(`tool_names.${toolName}`, { defaultValue: `Executing ${toolName}...` })
                 setToolStatus(translatedStatus)
@@ -309,8 +311,10 @@ const Chat = forwardRef(({ region }, ref) => {
                 return [...(prev || []), { key: data.key, value: data.value }]
               })
             } else if (data.type === 'suggestion_chips') {
-              // Buffer chips instead of showing immediately
               bufferedChips = data.options || []
+            } else if (data.type === 'find_handoff') {
+              if (!data.params) console.warn('[chat] find_handoff event received with no params', data)
+              setPendingHandoff(data.params || {})
             } else if (data.type === 'error') {
               const errorKey = data.code ? `errors.${data.code}` : null
               const errorMessage = errorKey ? t(errorKey, { defaultValue: data.message || data.detail }) : (data.message || data.detail)
@@ -417,9 +421,17 @@ const Chat = forwardRef(({ region }, ref) => {
           />
         )}
 
-        {/* Suggestion Chips from Agent */}
-        {suggestionChips.length > 0 && (
+        {/* Find Mode Handoff Chip + Agent Suggestion Chips */}
+        {(pendingHandoff || suggestionChips.length > 0) && (
           <div className="suggestions-row agent-suggestions">
+            {pendingHandoff && (
+              <button
+                className="suggestion-chip suggestion-chip--find"
+                onClick={() => { onHandoffToFind?.(pendingHandoff); setPendingHandoff(null) }}
+              >
+                🔍 {t('chat.open_in_find_mode')}
+              </button>
+            )}
             {suggestionChips.map((option, i) => (
               <button key={i} className="suggestion-chip" onClick={() => handleChipClick(option)}>
                 {option}
