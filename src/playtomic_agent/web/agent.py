@@ -39,22 +39,24 @@ def _build_system_prompt(user_profile: dict | None = None, language: str | None 
         prefs = []
         if user_profile.get("preferred_club_name"):
             prefs.append(
-                f"- Preferred club: {user_profile['preferred_club_name']} (slug: {user_profile.get('preferred_club_slug', 'unknown')})"
+                f"- Club: {user_profile['preferred_club_name']}"
+                f" (slug: {user_profile.get('preferred_club_slug', 'unknown')})"
             )
         if user_profile.get("preferred_city"):
-            prefs.append(f"- Preferred city: {user_profile['preferred_city']}")
+            prefs.append(f"- City: {user_profile['preferred_city']}")
         if user_profile.get("court_type"):
-            prefs.append(f"- Preferred court type: {user_profile['court_type']}")
+            prefs.append(f"- Court type: {user_profile['court_type']}")
         if user_profile.get("duration"):
-            prefs.append(f"- Preferred duration: {user_profile['duration']} minutes")
+            prefs.append(f"- Duration: {user_profile['duration']} min")
         if user_profile.get("preferred_time"):
-            prefs.append(f"- Preferred time: {user_profile['preferred_time']}")
+            prefs.append(f"- Time: {user_profile['preferred_time']}")
 
         if prefs:
             profile_section = (
                 "\n\nUSER PREFERENCES (from previous sessions):\n"
                 + "\n".join(prefs)
-                + "\nUse these as defaults when the user doesn't specify. Do NOT ask for these values if they are already set."
+                + "\nUse as defaults when missing from the conversation. "
+                "If club is not mentioned, suggest it rather than assuming."
             )
 
     lang_map = {
@@ -78,30 +80,33 @@ def _build_system_prompt(user_profile: dict | None = None, language: str | None 
 
     lang_name = lang_map.get(language, language)
 
-    return f"""You are a Padel court finder assistant. Today: {datetime.now().strftime("%Y-%m-%d")}. Timezone: {settings.default_timezone}. Language: {lang_name}.
+    return f"""You are a Padel court finder. Today: {datetime.now().strftime("%Y-%m-%d")}. \
+Timezone: {settings.default_timezone}. Language: {lang_name}. \
+Only answer about Padel bookings. Never invent names, times, prices, or links.
 
-GOAL: help users find and book Padel courts.
+FIND A CLUB:
+- Name mentioned → `find_clubs_by_name` (short name only)
+- City/region → `find_clubs_by_location`
+- Once club is known → `update_user_profile` twice: `preferred_club_slug` + `preferred_club_name`
 
-RULES:
-1. ONLY answer about Padel courts/bookings.
-2. NEVER invent data (names, times, prices, links). Use EXACT tool outputs.
+FIND SLOTS — need: club, date/range, time window. Collect only what's missing from message AND profile:
+- Info in the message → use directly, never re-ask.
+- Club not in message: profile has club → suggest it ("Shall I search at [name]?"); else ask.
+- Date not in message: use profile default silently if available, else ask.
+- Time not in message: use profile's preferred_time silently if available, else ask.
+- Date AND time both absent from message and profile → ask for both in one question.
+- Duration + court type: use from message or profile silently; skip if neither.
+→ browse/explore intent: ensure club_slug is known first (call `find_clubs_by_name` if only \
+a name was given). Then `handoff_to_find` with all collected params. \
+Resolve relative dates ("this weekend") to YYYY-MM-DD. \
+Split preferred_time ("18:00-21:00") → time_from/time_to. No follow-up after this call.
+→ direct answer ("just tell me what's free"): \
+`find_slots` (single date) or `find_slots_date_range` (max 7 days)
 
-WORKFLOW:
-1. Specific club mentioned? -> `find_clubs_by_name` (use SHORT name).
-2. City/Region mentioned? -> `find_clubs_by_location`.
-3. Availability needed?
-   - User wants to browse/explore (open-ended) -> call `handoff_to_find` with what you know (club, dates, time window). Resolve relative dates to ISO strings (YYYY-MM-DD). Do NOT call `find_slots` or `find_slots_date_range`. Do NOT send a follow-up message after calling `handoff_to_find`.
-   - User wants a direct answer now (e.g. "just tell me what's free at 18:00") -> `find_slots` (single date) or `find_slots_date_range` (start_date + end_date, max 7 days).
-4. Results found (>0 slots)? -> Show top 5 slots. Ask to see more if needed.
-   - Format: **HH:MM** - DURATION min - **PRICE** - [Book](booking_link)
-   - NEVER construct links manually. Use `booking_link` from tool.
-5. Multiple options/decisions? -> `suggest_next_steps`.
+RESULTS (>0 slots): show top 5. Format: **HH:MM** - DURATION min - **PRICE** - [Book](booking_link)
+Multiple options? → `suggest_next_steps`
 
-PREFERENCES:
-- Detect new preferences (club, court, etc.) -> Call `update_user_profile` silently.
-- Known Club -> Call `update_user_profile` TWICE: once for `preferred_club_slug`, once for `preferred_club_name`.
-
-keep responses SHORT and formatting CLEAN.{profile_section}"""
+PREFERENCES: detect any new preference → `update_user_profile` silently.{profile_section}"""
 
 
 def create_playtomic_agent(

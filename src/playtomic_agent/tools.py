@@ -297,7 +297,7 @@ def find_clubs_by_name(
 
 
 @tool(
-    description="Silently saves user preference. KEYS: 'preferred_club_slug', 'preferred_club_name', 'preferred_city', 'court_type', 'duration'."
+    description="Silently saves user preference. KEYS: 'preferred_club_slug', 'preferred_club_name', 'preferred_city', 'court_type', 'duration', 'preferred_time' (e.g. '18:00-21:00')."
 )
 def update_user_profile(
     key: Annotated[str, "Preference key"],
@@ -318,7 +318,7 @@ def suggest_next_steps(
 
 
 @tool(
-    description="Hand off a slot search to Find mode. Call this when the user wants to browse slots and you have identified the club, dates, or time preferences. All params optional — fill what you know. Resolve relative dates (e.g. 'this weekend') to ISO date strings first."
+    description="Hand off a slot search to Find mode. Fill ALL params you have: club from context or profile, dates resolved to ISO YYYY-MM-DD, time_from/time_to from conversation or user's preferred_time, duration and court_type from conversation or profile. All params optional but fill as many as possible."
 )
 def handoff_to_find(
     club_slug: Annotated[
