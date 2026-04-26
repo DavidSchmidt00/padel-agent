@@ -77,9 +77,11 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
     if (initialParams.club_slug) setClubSlug(initialParams.club_slug)
 
     // Ensure date range is always valid: derive missing bound, clamp if inverted
+    let resolvedFrom = dateFrom
+    let resolvedTo = null
     if (initialParams.date_from || initialParams.date_to) {
-      const resolvedFrom = initialParams.date_from ?? dateFrom
-      const resolvedTo =
+      resolvedFrom = initialParams.date_from ?? dateFrom
+      resolvedTo =
         initialParams.date_to && initialParams.date_to >= resolvedFrom
           ? initialParams.date_to
           : addDays(resolvedFrom, 6)
@@ -89,12 +91,33 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
 
     if (initialParams.duration) setDuration(String(initialParams.duration))
     if (initialParams.court_type) setCourtType(initialParams.court_type)
-    // Preserve existing day selection — only overwrite the time bounds
-    if (initialParams.time_from && initialParams.time_to) {
+
+    // Update time window: apply time bounds and derive selected days from the date range
+    const hasDate = initialParams.date_from || initialParams.date_to
+    const hasTime = initialParams.time_from || initialParams.time_to
+    if (hasDate || hasTime) {
+      const daysInRange = []
+      if (hasDate && resolvedTo) {
+        // Convert date range to weekday indices (0=Mon … 6=Sun)
+        const cur = new Date(resolvedFrom + 'T12:00:00')
+        const end = new Date(resolvedTo + 'T12:00:00')
+        while (cur <= end) {
+          const d = (cur.getDay() + 6) % 7
+          if (!daysInRange.includes(d)) daysInRange.push(d)
+          cur.setDate(cur.getDate() + 1)
+        }
+        daysInRange.sort((a, b) => a - b)
+      }
       setWindows((prev) =>
-        prev.map((w, i) =>
-          i === 0 ? { ...w, start: initialParams.time_from, end: initialParams.time_to } : w
-        )
+        prev.map((w, i) => {
+          if (i !== 0) return w
+          return {
+            ...w,
+            ...(daysInRange.length > 0 ? { days: daysInRange } : {}),
+            ...(initialParams.time_from ? { start: initialParams.time_from } : {}),
+            ...(initialParams.time_to ? { end: initialParams.time_to } : {}),
+          }
+        })
       )
     }
     onParamsConsumed?.()
