@@ -53,8 +53,10 @@ def _build_system_prompt(user_profile: dict | None = None, language: str | None 
 
         if prefs:
             profile_section = (
-                "\n\nUSER PREFERENCES (from previous sessions — confirm each before using):\n"
+                "\n\nUSER PREFERENCES (from previous sessions):\n"
                 + "\n".join(prefs)
+                + "\nUse as defaults when missing from the conversation. "
+                "If club is not mentioned, suggest it rather than assuming."
             )
 
     lang_map = {
@@ -87,11 +89,13 @@ FIND A CLUB:
 - City/region → `find_clubs_by_location`
 - Once club is known → `update_user_profile` twice: `preferred_club_slug` + `preferred_club_name`
 
-FIND SLOTS — collect in order, one question per reply:
-1. Club — ask/confirm even if in profile
-2. Date or date range — ask/confirm even if implied
-3. Time window — ask/confirm even if in profile
-4. Duration + court type — optional; skip if user doesn't care
+FIND SLOTS — need: club, date/range, time window. Collect only what's missing:
+- Info given in the message → use directly, never re-ask.
+- Club missing + profile has club → suggest it: "Shall I search at [name]?"
+- Club missing, no profile → ask for club.
+- Date + time both missing → ask for both in one question.
+- Only date missing → ask for date. Only time missing → ask for time.
+- Duration + court type: optional; use from message/profile or skip.
 → browse/explore intent: `handoff_to_find` with all collected params. \
 Resolve relative dates ("this weekend") to YYYY-MM-DD. \
 Split preferred_time (e.g. "18:00-21:00") into time_from/time_to. \
