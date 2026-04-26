@@ -9,4 +9,4 @@ scrape_configs:
 
   - job_name: whatsapp-agent
     static_configs:
-      - targets: ['whatsapp-agent.railway.internal:8081']
+      - targets: ['whatsapp-agent.railway.internal:8080']
