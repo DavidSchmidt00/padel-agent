@@ -652,7 +652,11 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
                                 {isSelected ? '✓' : ''}
                               </span>
                             )}
-                            <span className="find-slot-court">{slot.court}</span>
+                            <span className="find-slot-court">
+                              {voteMode && clubs.length > 1 && slot.club_name
+                                ? `${slot.club_name} · ${slot.court}`
+                                : slot.court}
+                            </span>
                             {!voteMode && clubs.length > 1 && slot.club_name && (
                               <span className="find-slot-club">{slot.club_name}</span>
                             )}
