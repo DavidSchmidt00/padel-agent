@@ -57,7 +57,7 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
   const [voteLoading, setVoteLoading] = useState(false)
   const [voteError, setVoteError] = useState(null)
   const [voteCopied, setVoteCopied] = useState(false)
-  const [collapsedTimes, setCollapsedTimes] = useState({})
+  const [expandedTimes, setExpandedTimes] = useState({})
   const { presets, savePreset, deletePreset } = usePresets()
   const [newPresetName, setNewPresetName] = useState('')
   const [showSavePreset, setShowSavePreset] = useState(false)
@@ -239,7 +239,7 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
     setResults(null)
     setSummary(null)
     setError(null)
-    setCollapsedTimes({})
+    setExpandedTimes({})
     setFormExpanded(true)
   }
   async function handleSearch(e) {
@@ -253,7 +253,7 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
     setError(null)
     setResults(null)
     setSummary(null)
-    setCollapsedTimes({})
+    setExpandedTimes({})
 
     try {
       const body = {
@@ -337,7 +337,7 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
 
   function toggleTimeGroup(date, time) {
     const key = `${date}|${time}`
-    setCollapsedTimes(prev => ({ ...prev, [key]: !prev[key] }))
+    setExpandedTimes(prev => ({ ...prev, [key]: !prev[key] }))
   }
 
   // Group results by date → time
@@ -689,27 +689,15 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
                 <div className="find-date-label">{formatDayLabel(date, region?.language || i18n.language)}</div>
                 {Object.entries(timeGroups).map(([time, slots]) => {
                   const key = `${date}|${time}`
-                  const isCollapsed = !!collapsedTimes[key]
-                  const courtCount = slots.length
+                  const isExpanded = !!expandedTimes[key]
+                  const hiddenCount = slots.length - 1
+                  const visibleSlots = isExpanded ? slots : [slots[0]]
                   return (
                     <div key={time} className="find-time-group">
-                      <button
-                        type="button"
-                        className={`find-time-header${isCollapsed ? ' find-time-header--collapsed' : ''}`}
-                        onClick={() => toggleTimeGroup(date, time)}
-                        aria-expanded={!isCollapsed}
-                      >
+                      <div className="find-time-header">
                         <span className="find-time-header-time">{time}</span>
-                        <span className="find-time-header-count">
-                          {`${courtCount} ${courtCount === 1
-                            ? t('findMode.court_singular', { defaultValue: 'court' })
-                            : t('findMode.courts_plural', { defaultValue: 'courts' })}`}
-                        </span>
-                        <span className="find-time-header-chevron" aria-hidden="true">
-                          {isCollapsed ? '›' : '⌄'}
-                        </span>
-                      </button>
-                      {!isCollapsed && slots.map((slot, i) => (
+                      </div>
+                      {visibleSlots.map((slot, i) => (
                         <div key={i} className="find-slot find-slot--indented">
                           <span className="find-slot-court">{slot.court}</span>
                           <span className="find-slot-meta">{slot.duration} min</span>
@@ -724,6 +712,17 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
                           </a>
                         </div>
                       ))}
+                      {hiddenCount > 0 && (
+                        <button
+                          type="button"
+                          className="find-time-more"
+                          onClick={() => toggleTimeGroup(date, time)}
+                        >
+                          {isExpanded
+                            ? t('findMode.show_less', { defaultValue: 'Show less' })
+                            : t('findMode.show_more_courts', { count: hiddenCount, defaultValue: `+${hiddenCount} more` })}
+                        </button>
+                      )}
                     </div>
                   )
                 })}

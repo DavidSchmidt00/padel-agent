@@ -121,7 +121,9 @@
         "save_preset_prompt": "Name für diese Vorlage:",
         "delete_preset": "Löschen",
         "court_singular": "Platz",
-        "courts_plural": "Plätze"
+        "courts_plural": "Plätze",
+        "show_more_courts": "+{{count}} weitere",
+        "show_less": "Weniger anzeigen"
     },
     "vote": {
         "start_btn": "Gruppenabstimmung starten 🗳️",

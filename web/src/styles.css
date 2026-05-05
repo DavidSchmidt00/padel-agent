@@ -1655,52 +1655,42 @@ body {
 .find-time-header {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  width: 100%;
-  padding: 0.45rem 1rem;
+  padding: 0.35rem 1rem;
   background: var(--bg-surface-raised);
-  border: none;
   border-bottom: 1px solid var(--border-color);
-  color: var(--text-primary);
-  font-family: inherit;
-  font-size: 0.85rem;
-  text-align: left;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.find-time-header:hover {
-  background: var(--accent-subtle);
 }
 
 .find-time-header-time {
   font-weight: 700;
-  min-width: 3rem;
-}
-
-.find-time-header-count {
-  flex: 1;
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-}
-
-.find-time-header-chevron {
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-  transition: transform 0.15s;
-  line-height: 1;
-}
-
-.find-time-header--collapsed .find-time-header-chevron {
-  transform: rotate(-90deg);
+  font-size: 0.85rem;
+  color: var(--text-primary);
 }
 
 .find-slot--indented {
   padding-left: 1.6rem;
 }
 
-.find-time-group:last-child .find-time-header:only-child,
-.find-time-group:last-child > .find-slot:last-child {
+.find-time-more {
+  display: block;
+  width: 100%;
+  padding: 0.3rem 1.6rem;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--accent);
+  font-family: inherit;
+  font-size: 0.78rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.find-time-more:hover {
+  background: var(--accent-subtle);
+}
+
+.find-time-group:last-child > .find-slot:last-child,
+.find-time-group:last-child > .find-time-more:last-child {
   border-bottom: none;
 }
 
@@ -1852,12 +1842,11 @@ body {
     margin-left: auto;
   }
 
-  .find-time-header {
-    padding: 0.4rem 0.75rem;
-    font-size: 0.82rem;
+  .find-slot--indented {
+    padding-left: 1.25rem;
   }
 
-  .find-slot--indented {
+  .find-time-more {
     padding-left: 1.25rem;
   }
 
