@@ -137,8 +137,7 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
     const offsetTo = Math.round((to - today) / (1000 * 60 * 60 * 24))
 
     savePreset(newPresetName, {
-      clubName,
-      clubSlug,
+      clubs,
       duration,
       courtType,
       windows,
@@ -150,8 +149,8 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
 
   function handleLoadPreset(settings) {
     if (!settings) return
-    setClubName(settings.clubName || '')
-    setClubSlug(settings.clubSlug || '')
+    if (settings.clubs) setClubs(settings.clubs)
+    else if (settings.clubSlug) setClubs([{ slug: settings.clubSlug, name: settings.clubName || settings.clubSlug }])
     setDuration(settings.duration || '')
     setCourtType(settings.courtType || '')
     setWindows(settings.windows || [])
