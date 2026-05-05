@@ -239,6 +239,7 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
     setResults(null)
     setSummary(null)
     setError(null)
+    setCollapsedTimes({})
     setFormExpanded(true)
   }
   async function handleSearch(e) {
@@ -252,6 +253,7 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
     setError(null)
     setResults(null)
     setSummary(null)
+    setCollapsedTimes({})
 
     try {
       const body = {
@@ -699,9 +701,9 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
                       >
                         <span className="find-time-header-time">{time}</span>
                         <span className="find-time-header-count">
-                          {courtCount === 1
+                          {`${courtCount} ${courtCount === 1
                             ? t('findMode.court_singular', { defaultValue: 'court' })
-                            : `${courtCount} ${t('findMode.courts_plural', { defaultValue: 'courts' })}`}
+                            : t('findMode.courts_plural', { defaultValue: 'courts' })}`}
                         </span>
                         <span className="find-time-header-chevron" aria-hidden="true">
                           {isCollapsed ? '›' : '⌄'}
