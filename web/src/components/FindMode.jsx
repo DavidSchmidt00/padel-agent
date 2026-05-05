@@ -644,52 +644,42 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
                 {Object.entries(timeGroups).map(([time, slots]) => {
                   const key = `${date}|${time}`
                   const isExpanded = !!expandedTimes[key]
+                  const visibleSlots = (isExpanded || voteMode) ? slots : [slots[0]]
                   const hiddenCount = slots.length - 1
-                  const visibleSlots = isExpanded ? slots : [slots[0]]
                   return (
                     <div key={time} className="find-time-group">
                       <div className="find-time-header">
                         <span className="find-time-header-time">{time}</span>
                       </div>
-                      {visibleSlots.map((slot, i) => (
-                        <div
-                          key={i}
-                          className={`find-slot find-slot--indented${voteMode && selected[slot._idx] ? ' find-slot--selected' : ''}`}
-                          onClick={voteMode ? () => setSelected(prev => ({ ...prev, [slot._idx]: !prev[slot._idx] })) : undefined}
-                          style={voteMode ? { cursor: 'pointer' } : undefined}
-                        >
-                          {voteMode && (
-                            <input
-                              type="checkbox"
-                              checked={!!selected[slot._idx]}
-                              onChange={() => {}}
-                              className="find-slot-checkbox"
-                            />
-                          )}
-                          {clubs.length > 1 && slot.club_name && (
-                            <span className="find-slot-club">{slot.club_name}</span>
-                          )}
-                          <span className="find-slot-court">{slot.court}</span>
-                          <span className="find-slot-meta">{slot.duration} min</span>
-                          <span className="find-slot-price">{slot.price}</span>
-                          {!voteMode && (
-                            <a
-                              href={slot.booking_link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="find-book-btn"
-                            >
-                              {t('findMode.book_btn')}
-                            </a>
-                          )}
-                        </div>
-                      ))}
-                      {hiddenCount > 0 && (
-                        <button
-                          type="button"
-                          className="find-time-more"
-                          onClick={() => toggleTimeGroup(date, time)}
-                        >
+                      {visibleSlots.map((slot) => {
+                        const isSelected = !!selected[slot._idx]
+                        return (
+                          <div
+                            key={slot._idx}
+                            className={`find-slot find-slot--indented${voteMode ? ' find-slot--voteable' : ''}${voteMode && isSelected ? ' find-slot--selected' : ''}`}
+                            onClick={voteMode ? () => setSelected(prev => ({ ...prev, [slot._idx]: !prev[slot._idx] })) : undefined}
+                          >
+                            {voteMode && (
+                              <span className={`find-slot-check${isSelected ? ' find-slot-check--on' : ''}`} aria-hidden="true">
+                                {isSelected ? '✓' : ''}
+                              </span>
+                            )}
+                            {clubs.length > 1 && slot.club_name && (
+                              <span className="find-slot-club">{slot.club_name}</span>
+                            )}
+                            <span className="find-slot-court">{slot.court}</span>
+                            <span className="find-slot-meta">{slot.duration} min</span>
+                            <span className="find-slot-price">{slot.price}</span>
+                            {!voteMode && (
+                              <a href={slot.booking_link} target="_blank" rel="noopener noreferrer" className="find-book-btn">
+                                {t('findMode.book_btn')}
+                              </a>
+                            )}
+                          </div>
+                        )
+                      })}
+                      {!voteMode && hiddenCount > 0 && (
+                        <button type="button" className="find-time-more" onClick={() => toggleTimeGroup(date, time)}>
                           {isExpanded
                             ? t('findMode.show_less', { defaultValue: 'Show less' })
                             : t('findMode.show_more_courts', { count: hiddenCount, defaultValue: `+${hiddenCount} more` })}
@@ -705,42 +695,45 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
       )}
     </div>
 
-    {/* Sticky vote footer — visible when vote mode is active */}
     {voteMode && (
       <div className="vote-footer">
         {voteUrl ? (
-          <>
-            <code className="vote-footer-url">{voteUrl}</code>
-            <button className="find-submit" style={{ margin: 0, whiteSpace: 'nowrap' }} onClick={handleCopyVoteUrl}>
-              {voteCopied ? t('vote.copied') : t('vote.copy_btn')}
-            </button>
+          <div className="vote-footer-share">
+            <span className="vote-footer-share-label">{t('vote.share_label')}</span>
+            <div className="vote-footer-share-row">
+              <code className="vote-footer-url">{voteUrl}</code>
+              <button className="vote-footer-copy-btn" onClick={handleCopyVoteUrl}>
+                {voteCopied ? t('vote.copied') : t('vote.copy_btn')}
+              </button>
+            </div>
             <button type="button" className="vote-footer-cancel" onClick={() => { setVoteMode(false); setVoteUrl(null) }}>
               {t('vote.close_btn')}
             </button>
-          </>
+          </div>
         ) : (
-          <>
-            <div className="vote-footer-actions">
-              <button type="button" className="suggestion-chip" onClick={() => selectAll(true)}>{t('vote.select_all')}</button>
-              <button type="button" className="suggestion-chip" onClick={() => selectAll(false)}>{t('vote.select_none')}</button>
+          <div className="vote-footer-select">
+            <div className="vote-footer-top">
+              <span className="vote-footer-hint">{t('vote.select_title')}</span>
+              <div className="vote-footer-pills">
+                <button type="button" className="vote-pill" onClick={() => selectAll(true)}>{t('vote.select_all')}</button>
+                <button type="button" className="vote-pill" onClick={() => selectAll(false)}>{t('vote.select_none')}</button>
+              </div>
             </div>
-            <span className="vote-footer-count">
-              {Object.values(selected).filter(Boolean).length} {t('vote.selected', { defaultValue: 'selected' })}
-            </span>
-            {voteError && <span className="vote-footer-error">{voteError}</span>}
-            <button
-              type="button"
-              className="find-submit"
-              style={{ margin: 0, whiteSpace: 'nowrap' }}
-              onClick={handleCreateVote}
-              disabled={voteLoading}
-            >
-              {voteLoading ? t('vote.creating') : t('vote.create_btn')}
-            </button>
-            <button type="button" className="vote-footer-cancel" onClick={() => setVoteMode(false)}>
-              {t('vote.close_btn')}
-            </button>
-          </>
+            <div className="vote-footer-bottom">
+              <span className="vote-footer-count">
+                {Object.values(selected).filter(Boolean).length} / {results.length} {t('vote.selected', { defaultValue: 'selected' })}
+              </span>
+              {voteError && <span className="vote-footer-error">{voteError}</span>}
+              <div className="vote-footer-btns">
+                <button type="button" className="vote-footer-cancel" onClick={() => setVoteMode(false)}>
+                  {t('vote.close_btn')}
+                </button>
+                <button type="button" className="vote-footer-create" onClick={handleCreateVote} disabled={voteLoading}>
+                  {voteLoading ? t('vote.creating') : t('vote.create_btn')}
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     )}
