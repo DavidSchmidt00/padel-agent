@@ -1694,6 +1694,68 @@ body {
   border-bottom: none;
 }
 
+/* Vote mode — inline slot selection */
+.find-slot--selected {
+  background: var(--accent-subtle);
+}
+
+.find-slot-checkbox {
+  accent-color: var(--accent);
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+/* Sticky vote footer */
+.vote-footer {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border-color);
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.12);
+  z-index: 20;
+}
+
+.vote-footer-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.vote-footer-count {
+  flex: 1;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.vote-footer-url {
+  flex: 1;
+  font-size: 0.78rem;
+  word-break: break-all;
+  color: var(--accent);
+}
+
+.vote-footer-cancel {
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.4rem 0.8rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.82rem;
+}
+
+.vote-footer-error {
+  font-size: 0.8rem;
+  color: var(--error-color);
+}
+
 .find-error {
   padding: 0.75rem 1rem;
   border-radius: var(--radius-md);

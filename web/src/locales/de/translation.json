@@ -137,7 +137,8 @@
         "copied": "Kopiert ✓",
         "close_btn": "Schließen",
         "error": "Abstimmung konnte nicht erstellt werden. Bitte versuche es erneut.",
-        "no_slots_selected": "Wähle mindestens einen Slot aus."
+        "no_slots_selected": "Wähle mindestens einen Slot aus.",
+        "selected": "ausgewählt"
     },
     "chat": {
         "open_in_find_mode": "Im Suchen-Modus öffnen"

@@ -137,7 +137,8 @@
         "copied": "Copied ✓",
         "close_btn": "Close",
         "error": "Could not create vote session. Please try again.",
-        "no_slots_selected": "Select at least one slot."
+        "no_slots_selected": "Select at least one slot.",
+        "selected": "selected"
     },
     "chat": {
         "open_in_find_mode": "Open in Find Mode"

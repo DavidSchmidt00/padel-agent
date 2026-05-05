@@ -356,12 +356,12 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
     setExpandedTimes(prev => ({ ...prev, [key]: !prev[key] }))
   }
 
-  // Group results by date → time
+  // Group results by date → time, keeping flat index for vote selection
   const grouped = results
-    ? results.reduce((acc, slot) => {
+    ? results.reduce((acc, slot, idx) => {
       if (!acc[slot.date]) acc[slot.date] = {}
       if (!acc[slot.date][slot.local_time]) acc[slot.date][slot.local_time] = []
-      acc[slot.date][slot.local_time].push(slot)
+      acc[slot.date][slot.local_time].push({ ...slot, _idx: idx })
       return acc
     }, {})
     : null
@@ -636,76 +636,6 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
             </button>
           )}
 
-          {voteMode && (
-            <div style={{ marginTop: '12px', padding: '12px', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}>
-              {!voteUrl ? (
-                <>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{t('vote.select_title')}</span>
-                    <div style={{ display: 'flex', gap: '6px' }}>
-                      <button type="button" className="suggestion-chip" onClick={() => selectAll(true)}>{t('vote.select_all')}</button>
-                      <button type="button" className="suggestion-chip" onClick={() => selectAll(false)}>{t('vote.select_none')}</button>
-                    </div>
-                  </div>
-
-                  {results.map((slot, i) => (
-                      <label key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 0', borderBottom: '1px solid var(--border-color)', cursor: 'pointer' }}>
-                        <input
-                          type="checkbox"
-                          checked={!!selected[i]}
-                          onChange={() => setSelected(prev => ({ ...prev, [i]: !prev[i] }))}
-                          style={{ accentColor: 'var(--accent)', width: '16px', height: '16px' }}
-                        />
-                        <span className="find-slot-meta" style={{ minWidth: '60px' }}>{formatDayLabel(slot.date, region?.language || i18n.language)}</span>
-                        <span className="find-slot-time">{slot.local_time}</span>
-                        <span className="find-slot-court">{slot.court}</span>
-                        <span className="find-slot-meta">{slot.duration} min</span>
-                        <span className="find-slot-price">{slot.price}</span>
-                      </label>
-                  ))}
-
-                  {voteError && <div className="find-error" style={{ marginTop: '6px' }}>{voteError}</div>}
-
-                  <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-                    <button
-                      type="button"
-                      className="find-submit"
-                      style={{ flex: 1, margin: 0 }}
-                      onClick={handleCreateVote}
-                      disabled={voteLoading}
-                    >
-                      {voteLoading ? t('vote.creating') : t('vote.create_btn')}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setVoteMode(false)}
-                      style={{ padding: '0 14px', background: 'var(--bg-surface-raised)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', cursor: 'pointer', color: 'var(--text-secondary)' }}
-                    >
-                      {t('vote.close_btn')}
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <span style={{ fontWeight: 600 }}>{t('vote.share_label')}</span>
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-                    <code style={{ flex: 1, fontSize: '0.8rem', wordBreak: 'break-all', color: 'var(--accent)' }}>{voteUrl}</code>
-                    <button className="find-submit" style={{ flex: '0 0 auto', padding: '6px 14px', margin: 0 }} onClick={handleCopyVoteUrl}>
-                      {voteCopied ? t('vote.copied') : t('vote.copy_btn')}
-                    </button>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => { setVoteMode(false); setVoteUrl(null) }}
-                    style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.8rem' }}
-                  >
-                    {t('vote.close_btn')}
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
           {results.length === 0 ? (
             <p className="find-no-results">{t('findMode.no_results')}</p>
           ) : (
@@ -723,21 +653,36 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
                         <span className="find-time-header-time">{time}</span>
                       </div>
                       {visibleSlots.map((slot, i) => (
-                        <div key={i} className="find-slot find-slot--indented">
+                        <div
+                          key={i}
+                          className={`find-slot find-slot--indented${voteMode && selected[slot._idx] ? ' find-slot--selected' : ''}`}
+                          onClick={voteMode ? () => setSelected(prev => ({ ...prev, [slot._idx]: !prev[slot._idx] })) : undefined}
+                          style={voteMode ? { cursor: 'pointer' } : undefined}
+                        >
+                          {voteMode && (
+                            <input
+                              type="checkbox"
+                              checked={!!selected[slot._idx]}
+                              onChange={() => {}}
+                              className="find-slot-checkbox"
+                            />
+                          )}
                           {clubs.length > 1 && slot.club_name && (
                             <span className="find-slot-club">{slot.club_name}</span>
                           )}
                           <span className="find-slot-court">{slot.court}</span>
                           <span className="find-slot-meta">{slot.duration} min</span>
                           <span className="find-slot-price">{slot.price}</span>
-                          <a
-                            href={slot.booking_link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="find-book-btn"
-                          >
-                            {t('findMode.book_btn')}
-                          </a>
+                          {!voteMode && (
+                            <a
+                              href={slot.booking_link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="find-book-btn"
+                            >
+                              {t('findMode.book_btn')}
+                            </a>
+                          )}
                         </div>
                       ))}
                       {hiddenCount > 0 && (
@@ -760,6 +705,46 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
         </div>
       )}
     </div>
+
+    {/* Sticky vote footer — visible when vote mode is active */}
+    {voteMode && (
+      <div className="vote-footer">
+        {voteUrl ? (
+          <>
+            <code className="vote-footer-url">{voteUrl}</code>
+            <button className="find-submit" style={{ margin: 0, whiteSpace: 'nowrap' }} onClick={handleCopyVoteUrl}>
+              {voteCopied ? t('vote.copied') : t('vote.copy_btn')}
+            </button>
+            <button type="button" className="vote-footer-cancel" onClick={() => { setVoteMode(false); setVoteUrl(null) }}>
+              {t('vote.close_btn')}
+            </button>
+          </>
+        ) : (
+          <>
+            <div className="vote-footer-actions">
+              <button type="button" className="suggestion-chip" onClick={() => selectAll(true)}>{t('vote.select_all')}</button>
+              <button type="button" className="suggestion-chip" onClick={() => selectAll(false)}>{t('vote.select_none')}</button>
+            </div>
+            <span className="vote-footer-count">
+              {Object.values(selected).filter(Boolean).length} {t('vote.selected', { defaultValue: 'selected' })}
+            </span>
+            {voteError && <span className="vote-footer-error">{voteError}</span>}
+            <button
+              type="button"
+              className="find-submit"
+              style={{ margin: 0, whiteSpace: 'nowrap' }}
+              onClick={handleCreateVote}
+              disabled={voteLoading}
+            >
+              {voteLoading ? t('vote.creating') : t('vote.create_btn')}
+            </button>
+            <button type="button" className="vote-footer-cancel" onClick={() => setVoteMode(false)}>
+              {t('vote.close_btn')}
+            </button>
+          </>
+        )}
+      </div>
+    )}
     </div>
   )
 }
