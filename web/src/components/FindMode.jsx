@@ -537,7 +537,7 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
           </div>
 
           {/* Bottom action row: Search + Save preset */}
-          <div className="find-field" style={{ display: showSavePreset ? 'flex' : 'none', flexDirection: 'row', gap: '8px' }}>
+          <div className={`find-preset-save-row${showSavePreset ? ' find-preset-save-row--active' : ''}`}>
             <input
               ref={presetInputRef}
               type="text"
@@ -552,33 +552,33 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
                   setNewPresetName(''); setShowSavePreset(false)
                 }
               }}
-              style={{ flex: 1, margin: 0 }}
+              className="find-preset-name-input"
             />
             <button
               type="button"
               onMouseDown={(e) => { e.preventDefault(); handleSavePreset(); setShowSavePreset(false) }}
               disabled={!newPresetName.trim()}
-              style={{ width: '44px', padding: 0, margin: 0, border: '1px solid var(--accent)', borderRadius: 'var(--radius-sm)', background: 'var(--bg-surface)', color: 'var(--accent)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              className="find-icon-btn find-icon-btn--accent"
             >
               ✓
             </button>
             <button
               type="button"
               onMouseDown={(e) => { e.preventDefault(); setNewPresetName(''); setShowSavePreset(false) }}
-              style={{ width: '44px', padding: 0, margin: 0, border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', background: 'var(--bg-surface-raised)', color: 'var(--text-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              className="find-icon-btn"
             >
               ✕
             </button>
           </div>
-          <div style={{ display: showSavePreset ? 'none' : 'flex', gap: '8px', alignItems: 'stretch' }}>
-            <button type="submit" className="find-submit" disabled={loading} style={{ flex: 1, margin: 0 }}>
+          <div className={`find-search-row${showSavePreset ? ' find-search-row--hidden' : ''}`}>
+            <button type="submit" className="find-submit find-submit--flex" disabled={loading}>
               {loading ? t('findMode.searching') : t('findMode.search_btn')}
             </button>
             <button
               type="button"
               onClick={() => setShowSavePreset(true)}
               title={t('findMode.save_preset_btn')}
-              style={{ background: 'var(--bg-surface-raised)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', padding: '0 0.85rem', color: 'var(--accent)', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}
+              className="find-secondary-btn"
             >
               {t('findMode.save_preset_short')}
             </button>
@@ -586,22 +586,19 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
 
           {/* Preset pills */}
           {presets.length > 0 && !showSavePreset && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
+            <div className="find-preset-pills">
               {presets.map(p => (
-                <div key={p.id} style={{ display: 'inline-flex', alignItems: 'center', background: 'var(--accent-subtle)', border: '1px solid rgba(6, 182, 212, 0.2)', borderRadius: '12px', padding: '3px 10px', fontSize: '0.78rem' }}>
-                  <span
-                    style={{ cursor: 'pointer', paddingRight: '6px', color: 'var(--text-primary)' }}
-                    onClick={() => handleLoadPreset(p.settings)}
-                  >
+                <div key={p.id} className="find-club-chip">
+                  <span className="find-club-chip-label" onClick={() => handleLoadPreset(p.settings)}>
                     {p.name}
                   </span>
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); deletePreset(p.id) }}
-                    style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '0', fontSize: '0.7rem', lineHeight: 1 }}
+                    className="find-club-chip-remove"
                     title={t('findMode.delete_preset')}
                   >
-                    ✕
+                    ×
                   </button>
                 </div>
               ))}
@@ -621,16 +618,7 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
           )}
 
           {results.length > 0 && !voteMode && (
-            <button
-              type="button"
-              style={{
-                width: '100%', margin: '8px 0 4px', padding: '0.55rem 1rem',
-                background: 'var(--bg-surface)', border: '1px solid rgba(6,182,212,0.4)',
-                borderRadius: 'var(--radius-sm)', color: 'var(--accent)',
-                fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer',
-              }}
-              onClick={handleOpenVoteMode}
-            >
+            <button type="button" className="find-vote-start-btn" onClick={handleOpenVoteMode}>
               {t('vote.start_btn')}
             </button>
           )}

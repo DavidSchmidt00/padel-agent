@@ -1974,6 +1974,132 @@ body {
   opacity: 1;
 }
 
+.find-club-chip-label {
+  cursor: pointer;
+  color: var(--text-primary);
+  padding-right: 2px;
+}
+
+/* Preset pills reuse .find-club-chip — extra row wrapper */
+.find-preset-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+/* Preset save row */
+.find-preset-save-row {
+  display: none;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.find-preset-save-row--active {
+  display: flex;
+}
+
+.find-preset-name-input {
+  flex: 1;
+  margin: 0;
+}
+
+/* Search + save-preset button row */
+.find-search-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.find-search-row--hidden {
+  display: none;
+}
+
+.find-submit--flex {
+  flex: 1;
+  margin: 0;
+}
+
+/* Small icon buttons (44×44 touch target) */
+.find-icon-btn {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  margin: 0;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface-raised);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  transition: background 0.12s;
+  flex-shrink: 0;
+}
+
+.find-icon-btn:hover {
+  background: var(--bg-surface);
+}
+
+.find-icon-btn--accent {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--bg-surface);
+}
+
+.find-icon-btn--accent:hover:not(:disabled) {
+  background: var(--accent-subtle);
+}
+
+.find-icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Secondary outline button (save preset short, etc.) */
+.find-secondary-btn {
+  padding: 0 0.85rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface-raised);
+  color: var(--accent);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+  white-space: nowrap;
+}
+
+.find-secondary-btn:hover {
+  background: var(--accent-subtle);
+  border-color: rgba(6, 182, 212, 0.4);
+}
+
+/* "Start vote" outline CTA */
+.find-vote-start-btn {
+  width: 100%;
+  margin: 8px 0 4px;
+  padding: 0.55rem 1rem;
+  border: 1px solid rgba(6, 182, 212, 0.4);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  color: var(--accent);
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.find-vote-start-btn:hover {
+  background: var(--accent-subtle);
+  border-color: rgba(6, 182, 212, 0.65);
+}
+
 .find-slot-club {
   font-size: 0.72rem;
   color: var(--text-secondary);
