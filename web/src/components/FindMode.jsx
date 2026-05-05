@@ -306,7 +306,7 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
   }
 
   function handleOpenVoteMode() {
-    setSelected(Object.fromEntries(results.map((_, i) => [i, true])))
+    setSelected({})
     setVoteUrl(null)
     setVoteError(null)
     setVoteCopied(false)
