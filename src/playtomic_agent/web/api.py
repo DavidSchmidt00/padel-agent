@@ -110,7 +110,8 @@ class TimeWindow(BaseModel):
 
 
 class SearchRequest(BaseModel):
-    club_slug: str
+    club_slugs: list[str]
+    club_names: list[str] = []  # parallel to club_slugs; used as display label in results
     date_from: str
     date_to: str
     time_windows: list[TimeWindow]
@@ -129,6 +130,7 @@ class SlotResult(BaseModel):
     price: str
     booking_link: str
     court_type: str | None = None  # "SINGLE" | "DOUBLE" — propagated from SearchRequest
+    club_name: str = ""
 
 
 class CreateVoteRequest(BaseModel):
@@ -436,7 +438,9 @@ async def search_clubs_endpoint(q: str = "") -> list[ClubResult]:
 @app.post("/api/search", response_model=SearchResponse)
 async def search_slots(req: SearchRequest):
     """Scan for available slots across a date range and time windows, bypassing the LLM."""
-    # 1. Validate date range
+    # 1. Validate inputs
+    if not req.club_slugs:
+        raise HTTPException(status_code=422, detail="At least one club_slug is required.")
     try:
         d_from = _date.fromisoformat(req.date_from)
         d_to = _date.fromisoformat(req.date_to)
@@ -458,42 +462,45 @@ async def search_slots(req: SearchRequest):
         for day in w.days:
             window_by_day[day].append(w)
 
-    # 4. Scan each (date, window) combination
+    # 4. Scan each club × date × window combination
     results: list[SlotResult] = []
     dates_with_windows: set[str] = set()
     tz_zone = ZoneInfo(tz_str)
 
     try:
         with PlaytomicClient() as client:
-            for d in all_dates:
-                windows = window_by_day.get(d.weekday(), [])
-                if not windows:
-                    continue
-                date_str = d.isoformat()
-                dates_with_windows.add(date_str)
-                for window in windows:
-                    slots = client.find_slots(
-                        club_slug=req.club_slug,
-                        date=date_str,
-                        court_type=req.court_type,
-                        start_time=window.start,
-                        end_time=window.end,
-                        timezone=tz_str,
-                        duration=req.duration,
-                    )
-                    for slot in slots:
-                        local_dt = slot.time.astimezone(tz_zone)
-                        results.append(
-                            SlotResult(
-                                date=date_str,
-                                local_time=local_dt.strftime("%H:%M"),
-                                court=slot.court_name,
-                                duration=slot.duration,
-                                price=slot.price,
-                                booking_link=slot.get_link(),
-                                court_type=slot.court_type,
-                            )
+            for i, club_slug in enumerate(req.club_slugs):
+                club_name = req.club_names[i] if i < len(req.club_names) else club_slug
+                for d in all_dates:
+                    windows = window_by_day.get(d.weekday(), [])
+                    if not windows:
+                        continue
+                    date_str = d.isoformat()
+                    dates_with_windows.add(date_str)
+                    for window in windows:
+                        slots = client.find_slots(
+                            club_slug=club_slug,
+                            date=date_str,
+                            court_type=req.court_type,
+                            start_time=window.start,
+                            end_time=window.end,
+                            timezone=tz_str,
+                            duration=req.duration,
                         )
+                        for slot in slots:
+                            local_dt = slot.time.astimezone(tz_zone)
+                            results.append(
+                                SlotResult(
+                                    date=date_str,
+                                    local_time=local_dt.strftime("%H:%M"),
+                                    court=slot.court_name,
+                                    duration=slot.duration,
+                                    price=slot.price,
+                                    booking_link=slot.get_link(),
+                                    court_type=slot.court_type,
+                                    club_name=club_name,
+                                )
+                            )
     except ClubNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except APIError as exc:

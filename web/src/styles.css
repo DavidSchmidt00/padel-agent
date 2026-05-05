@@ -1739,6 +1739,50 @@ body {
 }
 
 /* ── Club autocomplete ─────────────────────────────── */
+.find-club-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.find-club-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.55rem;
+  background: var(--accent-subtle);
+  border: 1px solid rgba(6, 182, 212, 0.35);
+  border-radius: 20px;
+  font-size: 0.8rem;
+  color: var(--accent);
+}
+
+.find-club-chip-remove {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0;
+  opacity: 0.7;
+}
+
+.find-club-chip-remove:hover {
+  opacity: 1;
+}
+
+.find-slot-club {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  padding: 0.1rem 0.4rem;
+  background: var(--bg-surface-raised);
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+}
+
 .find-club-wrap {
   position: relative;
   width: 100%;

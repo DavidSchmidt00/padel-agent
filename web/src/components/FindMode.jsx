@@ -33,8 +33,12 @@ function todayStr() {
 export default function FindMode({ region, profile, initialParams, onParamsConsumed }) {
   const { t, i18n } = useTranslation()
 
-  const [clubName, setClubName] = useState(profile?.preferred_club_name || '')
-  const [clubSlug, setClubSlug] = useState(profile?.preferred_club_slug || '')
+  const [clubs, setClubs] = useState(
+    profile?.preferred_club_slug
+      ? [{ slug: profile.preferred_club_slug, name: profile.preferred_club_name || profile.preferred_club_slug }]
+      : []
+  )
+  const [clubInput, setClubInput] = useState('')
   const [clubOptions, setClubOptions] = useState([])
   const [clubSearching, setClubSearching] = useState(false)
   const clubDebounceRef = useRef(null)
@@ -74,8 +78,9 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
     if (!initialParams || consumedParamsRef.current === initialParams) return
     consumedParamsRef.current = initialParams
 
-    if (initialParams.club_name) setClubName(initialParams.club_name)
-    if (initialParams.club_slug) setClubSlug(initialParams.club_slug)
+    if (initialParams.club_slug) {
+      setClubs([{ slug: initialParams.club_slug, name: initialParams.club_name || initialParams.club_slug }])
+    }
 
     // Ensure date range is always valid: derive missing bound, clamp if inverted
     let resolvedFrom = dateFrom
@@ -161,6 +166,7 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
   }
 
   function getSearchSummary() {
+    const clubsLabel = clubs.map((c) => c.name).join(', ') || '—'
     const dateRange = `${formatShortDate(dateFrom)} – ${formatShortDate(dateTo)}`
     const windowTexts = windows
       .map((w) => {
@@ -168,12 +174,11 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
         return `${days} ${w.start}–${w.end}`
       })
       .join(', ')
-    return `${clubName} · ${dateRange} · ${windowTexts}`
+    return `${clubsLabel} · ${dateRange} · ${windowTexts}`
   }
 
-  function handleClubNameChange(val) {
-    setClubName(val)
-    setClubSlug('')
+  function handleClubInputChange(val) {
+    setClubInput(val)
     setClubOptions([])
     if (clubDebounceRef.current) clearTimeout(clubDebounceRef.current)
     if (val.length < 2) return
@@ -191,9 +196,15 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
   }
 
   function selectClub(club) {
-    setClubName(club.name)
-    setClubSlug(club.slug)
+    if (!clubs.find((c) => c.slug === club.slug)) {
+      setClubs((prev) => [...prev, { slug: club.slug, name: club.name }])
+    }
+    setClubInput('')
     setClubOptions([])
+  }
+
+  function removeClub(slug) {
+    setClubs((prev) => prev.filter((c) => c.slug !== slug))
   }
 
   function handleDateFromChange(val) {
@@ -228,8 +239,12 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
   }
 
   function handleClearSearch() {
-    setClubName(profile?.preferred_club_name || '')
-    setClubSlug(profile?.preferred_club_slug || '')
+    setClubs(
+      profile?.preferred_club_slug
+        ? [{ slug: profile.preferred_club_slug, name: profile.preferred_club_name || profile.preferred_club_slug }]
+        : []
+    )
+    setClubInput('')
     setClubOptions([])
     setDateFrom(todayStr())
     setDateTo(addDays(todayStr(), 6))
@@ -244,7 +259,7 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
   }
   async function handleSearch(e) {
     e.preventDefault()
-    if (!clubSlug) {
+    if (clubs.length === 0) {
       setError(t('findMode.club_not_selected'))
       return
     }
@@ -257,7 +272,8 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
 
     try {
       const body = {
-        club_slug: clubSlug,
+        club_slugs: clubs.map((c) => c.slug),
+        club_names: clubs.map((c) => c.name),
         date_from: dateFrom,
         date_to: dateTo,
         time_windows: windows,
@@ -376,18 +392,27 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
       {/* Expandable form */}
       {formExpanded && (
         <form className="find-form" onSubmit={handleSearch}>
-          {/* Club search autocomplete */}
+          {/* Club search autocomplete — multi-select */}
           <div className="find-field">
             <label>{t('findMode.club_label')}</label>
+            {clubs.length > 0 && (
+              <div className="find-club-chips">
+                {clubs.map((c) => (
+                  <span key={c.slug} className="find-club-chip">
+                    {c.name}
+                    <button type="button" className="find-club-chip-remove" onClick={() => removeClub(c.slug)} aria-label={`Remove ${c.name}`}>×</button>
+                  </span>
+                ))}
+              </div>
+            )}
             <div className="find-club-wrap">
               <input
                 type="text"
-                value={clubName}
-                onChange={(e) => handleClubNameChange(e.target.value)}
+                value={clubInput}
+                onChange={(e) => handleClubInputChange(e.target.value)}
                 onBlur={() => setTimeout(() => setClubOptions([]), 150)}
                 placeholder={t('findMode.club_placeholder')}
                 autoComplete="off"
-                className={clubSlug ? 'find-club-confirmed' : ''}
               />
               {clubSearching && <span className="find-club-spinner">{t('findMode.club_searching')}</span>}
               {clubOptions.length > 0 && (
@@ -699,6 +724,9 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
                       </div>
                       {visibleSlots.map((slot, i) => (
                         <div key={i} className="find-slot find-slot--indented">
+                          {clubs.length > 1 && slot.club_name && (
+                            <span className="find-slot-club">{slot.club_name}</span>
+                          )}
                           <span className="find-slot-court">{slot.court}</span>
                           <span className="find-slot-meta">{slot.duration} min</span>
                           <span className="find-slot-price">{slot.price}</span>
