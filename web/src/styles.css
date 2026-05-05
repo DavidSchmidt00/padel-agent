@@ -1651,6 +1651,59 @@ body {
   box-shadow: 0 3px 10px rgba(6, 182, 212, 0.35);
 }
 
+/* Time sub-group within a date card */
+.find-time-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.45rem 1rem;
+  background: var(--bg-surface-raised);
+  border: none;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.find-time-header:hover {
+  background: var(--accent-subtle);
+}
+
+.find-time-header-time {
+  font-weight: 700;
+  min-width: 3rem;
+}
+
+.find-time-header-count {
+  flex: 1;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.find-time-header-chevron {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  transition: transform 0.15s;
+  line-height: 1;
+}
+
+.find-time-header--collapsed .find-time-header-chevron {
+  transform: rotate(-90deg);
+}
+
+.find-slot--indented {
+  padding-left: 1.6rem;
+}
+
+.find-time-group:last-child .find-time-header:only-child,
+.find-time-group:last-child > .find-slot:last-child {
+  border-bottom: none;
+}
+
 .find-error {
   padding: 0.75rem 1rem;
   border-radius: var(--radius-md);
@@ -1797,6 +1850,15 @@ body {
 
   .find-book-btn {
     margin-left: auto;
+  }
+
+  .find-time-header {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.82rem;
+  }
+
+  .find-slot--indented {
+    padding-left: 1.25rem;
   }
 
   .attendees-label {

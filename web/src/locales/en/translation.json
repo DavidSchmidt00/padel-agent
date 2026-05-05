@@ -119,7 +119,9 @@
         "save_preset_btn": "Save as preset",
         "save_preset_short": "+ Save",
         "save_preset_prompt": "Name for this preset:",
-        "delete_preset": "Delete"
+        "delete_preset": "Delete",
+        "court_singular": "court",
+        "courts_plural": "courts"
     },
     "vote": {
         "start_btn": "Start Group Vote 🗳️",
