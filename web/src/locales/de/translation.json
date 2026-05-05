@@ -119,7 +119,9 @@
         "save_preset_btn": "Als Vorlage speichern",
         "save_preset_short": "+ Speichern",
         "save_preset_prompt": "Name für diese Vorlage:",
-        "delete_preset": "Löschen"
+        "delete_preset": "Löschen",
+        "court_singular": "Platz",
+        "courts_plural": "Plätze"
     },
     "vote": {
         "start_btn": "Gruppenabstimmung starten 🗳️",

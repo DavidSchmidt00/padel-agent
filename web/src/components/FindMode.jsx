@@ -57,6 +57,7 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
   const [voteLoading, setVoteLoading] = useState(false)
   const [voteError, setVoteError] = useState(null)
   const [voteCopied, setVoteCopied] = useState(false)
+  const [collapsedTimes, setCollapsedTimes] = useState({})
   const { presets, savePreset, deletePreset } = usePresets()
   const [newPresetName, setNewPresetName] = useState('')
   const [showSavePreset, setShowSavePreset] = useState(false)
@@ -332,11 +333,17 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
     setTimeout(() => setVoteCopied(false), 2000)
   }
 
-  // Group results by date
+  function toggleTimeGroup(date, time) {
+    const key = `${date}|${time}`
+    setCollapsedTimes(prev => ({ ...prev, [key]: !prev[key] }))
+  }
+
+  // Group results by date → time
   const grouped = results
     ? results.reduce((acc, slot) => {
-      if (!acc[slot.date]) acc[slot.date] = []
-      acc[slot.date].push(slot)
+      if (!acc[slot.date]) acc[slot.date] = {}
+      if (!acc[slot.date][slot.local_time]) acc[slot.date][slot.local_time] = []
+      acc[slot.date][slot.local_time].push(slot)
       return acc
     }, {})
     : null
@@ -675,25 +682,49 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
           {results.length === 0 ? (
             <p className="find-no-results">{t('findMode.no_results')}</p>
           ) : (
-            Object.entries(grouped).map(([date, slots]) => (
+            Object.entries(grouped).map(([date, timeGroups]) => (
               <div key={date} className="find-date-group">
                 <div className="find-date-label">{formatDayLabel(date, region?.language || i18n.language)}</div>
-                {slots.map((slot, i) => (
-                  <div key={i} className="find-slot">
-                    <span className="find-slot-time">{slot.local_time}</span>
-                    <span className="find-slot-court">{slot.court}</span>
-                    <span className="find-slot-meta">{slot.duration} min</span>
-                    <span className="find-slot-price">{slot.price}</span>
-                    <a
-                      href={slot.booking_link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="find-book-btn"
-                    >
-                      {t('findMode.book_btn')}
-                    </a>
-                  </div>
-                ))}
+                {Object.entries(timeGroups).map(([time, slots]) => {
+                  const key = `${date}|${time}`
+                  const isCollapsed = !!collapsedTimes[key]
+                  const courtCount = slots.length
+                  return (
+                    <div key={time} className="find-time-group">
+                      <button
+                        type="button"
+                        className={`find-time-header${isCollapsed ? ' find-time-header--collapsed' : ''}`}
+                        onClick={() => toggleTimeGroup(date, time)}
+                        aria-expanded={!isCollapsed}
+                      >
+                        <span className="find-time-header-time">{time}</span>
+                        <span className="find-time-header-count">
+                          {courtCount === 1
+                            ? t('findMode.court_singular', { defaultValue: 'court' })
+                            : `${courtCount} ${t('findMode.courts_plural', { defaultValue: 'courts' })}`}
+                        </span>
+                        <span className="find-time-header-chevron" aria-hidden="true">
+                          {isCollapsed ? '›' : '⌄'}
+                        </span>
+                      </button>
+                      {!isCollapsed && slots.map((slot, i) => (
+                        <div key={i} className="find-slot find-slot--indented">
+                          <span className="find-slot-court">{slot.court}</span>
+                          <span className="find-slot-meta">{slot.duration} min</span>
+                          <span className="find-slot-price">{slot.price}</span>
+                          <a
+                            href={slot.booking_link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="find-book-btn"
+                          >
+                            {t('findMode.book_btn')}
+                          </a>
+                        </div>
+                      ))}
+                    </div>
+                  )
+                })}
               </div>
             ))
           )}
