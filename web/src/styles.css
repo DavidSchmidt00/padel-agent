@@ -2209,12 +2209,13 @@ body {
     gap: 0.6rem;
   }
 
-  .find-slot-court {
+  .find-slot-court-wrap {
     flex: 1 1 0%;
     min-width: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  }
+
+  .find-slot--voteable {
+    padding-left: 2.6rem;
   }
 
   .find-book-btn {
