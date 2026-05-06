@@ -1619,6 +1619,7 @@ body {
 
 .find-slot-court {
   flex: 1;
+  min-width: 0;
   color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
