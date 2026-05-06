@@ -1713,11 +1713,12 @@ body {
 }
 
 /* ── Vote mode: tappable slot cards ── */
-.find-slot--voteable {
+.find-slot--voteable,
+.find-slot--indented.find-slot--voteable {
   cursor: pointer;
   transition: background 0.12s, border-color 0.12s;
   position: relative;
-  padding-left: 2.6rem; /* room for the check badge */
+  padding-left: 2.6rem;
 }
 
 .find-slot--voteable:active {
@@ -2214,16 +2215,17 @@ body {
     min-width: 0;
   }
 
-  .find-slot--voteable {
+  .find-slot--indented {
+    padding-left: 1.25rem;
+  }
+
+  .find-slot--voteable,
+  .find-slot--indented.find-slot--voteable {
     padding-left: 2.6rem;
   }
 
   .find-book-btn {
     margin-left: auto;
-  }
-
-  .find-slot--indented {
-    padding-left: 1.25rem;
   }
 
   .find-time-more {
