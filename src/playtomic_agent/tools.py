@@ -1,15 +1,45 @@
 """LangChain tools for the Playtomic agent."""
 
 from datetime import datetime, timedelta
-from typing import Annotated, Literal
+from typing import TYPE_CHECKING, Annotated, Literal
+from zoneinfo import ZoneInfo
 
 from langchain_core.tools import tool
 
 from playtomic_agent.client.api import PlaytomicClient
 from playtomic_agent.client.utils import create_booking_link as utils_create_booking_link
+from playtomic_agent.config import get_settings
 from playtomic_agent.metrics import SLOT_SEARCH_OUTCOMES
 
+if TYPE_CHECKING:
+    from playtomic_agent.models import Slot
+
 _DE_WEEKDAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
+
+
+def _format_slot(slot: "Slot", tz: ZoneInfo) -> dict:
+    """Convert a Slot to the compact dict sent to the LLM."""
+    local = slot.time.astimezone(tz)
+    return {
+        "display": (
+            f"{_DE_WEEKDAYS[local.weekday()]} | "
+            f"{local.strftime('%d.%m')} | "
+            f"{local.strftime('%H:%M')} | "
+            f"{slot.duration} min"
+        ),
+        "local_time": local.strftime("%H:%M"),
+        "date": local.strftime("%Y-%m-%d"),
+        "court": slot.court_name,
+        "court_type": slot.court_type,
+        "duration": slot.duration,
+        "price": slot.price,
+        "booking_link": utils_create_booking_link(
+            slot.club_id,
+            slot.court_id,
+            slot.time.strftime("%Y-%m-%dT%H:%M:%S.000Z"),
+            slot.duration,
+        ),
+    }
 
 
 @tool(
@@ -35,8 +65,6 @@ def find_slots(
 ) -> Annotated[dict, "A summary of available slots with count and details."]:
     """Find available slots using PlaytomicClient."""
     try:
-        from playtomic_agent.config import get_settings
-
         effective_tz = timezone or get_settings().default_timezone
         with PlaytomicClient() as client:
             slots = client.find_slots(
@@ -53,39 +81,11 @@ def find_slots(
             if not slots:
                 return {"count": 0, "slots": []}
 
-            # Return compact summaries with pre-computed local times and booking links
-            # Limit to 10 slots to keep LLM context manageable
-            from zoneinfo import ZoneInfo
-
-            from playtomic_agent.client.utils import create_booking_link as _make_link
-
             tz = ZoneInfo(effective_tz)
             return {
                 "count": len(slots),
                 "date": date,
-                "slots": [
-                    {
-                        "display": (
-                            f"{_DE_WEEKDAYS[s.time.astimezone(tz).weekday()]} | "
-                            f"{s.time.astimezone(tz).strftime('%d.%m')} | "
-                            f"{s.time.astimezone(tz).strftime('%H:%M')} | "
-                            f"{s.duration} min"
-                        ),
-                        "local_time": s.time.astimezone(tz).strftime("%H:%M"),
-                        "date": s.time.astimezone(tz).strftime("%Y-%m-%d"),
-                        "court": s.court_name,
-                        "court_type": s.court_type,
-                        "duration": s.duration,
-                        "price": s.price,
-                        "booking_link": _make_link(
-                            s.club_id,
-                            s.court_id,
-                            s.time.strftime("%Y-%m-%dT%H:%M:%S.000Z"),
-                            s.duration,
-                        ),
-                    }
-                    for s in slots
-                ],
+                "slots": [_format_slot(s, tz) for s in slots],
             }
     except Exception as exc:
         import logging
@@ -124,10 +124,6 @@ def find_slots_date_range(
 ) -> Annotated[dict, "Aggregated slot summary grouped by date."]:
     """Find available slots over a date range using PlaytomicClient."""
     import logging
-    from zoneinfo import ZoneInfo
-
-    from playtomic_agent.client.utils import create_booking_link as _make_link
-    from playtomic_agent.config import get_settings
 
     MAX_DAYS = 7
     SLOTS_PER_DATE = 5
@@ -171,29 +167,7 @@ def find_slots_date_range(
                     {
                         "date": date_str,
                         "count": len(slots),
-                        "slots": [
-                            {
-                                "display": (
-                                    f"{_DE_WEEKDAYS[s.time.astimezone(tz).weekday()]} | "
-                                    f"{s.time.astimezone(tz).strftime('%d.%m')} | "
-                                    f"{s.time.astimezone(tz).strftime('%H:%M')} | "
-                                    f"{s.duration} min"
-                                ),
-                                "local_time": s.time.astimezone(tz).strftime("%H:%M"),
-                                "date": s.time.astimezone(tz).strftime("%Y-%m-%d"),
-                                "court": s.court_name,
-                                "court_type": s.court_type,
-                                "duration": s.duration,
-                                "price": s.price,
-                                "booking_link": _make_link(
-                                    s.club_id,
-                                    s.court_id,
-                                    s.time.strftime("%Y-%m-%dT%H:%M:%S.000Z"),
-                                    s.duration,
-                                ),
-                            }
-                            for s in slots[:SLOTS_PER_DATE]
-                        ],
+                        "slots": [_format_slot(s, tz) for s in slots[:SLOTS_PER_DATE]],
                     }
                 )
                 total_count += len(slots)
@@ -233,10 +207,9 @@ def find_clubs_by_location(
     query: Annotated[str, "Search query (e.g. 'Berlin', 'Munich')"],
 ) -> Annotated[list[dict], "List of found clubs."]:
     """Finds clubs near a specific location using geocoding."""
-    try:
-        from playtomic_agent.context import get_country
+    from playtomic_agent.context import get_country
 
-        # Use per-request country
+    try:
         try:
             country = get_country()
         except (ImportError, LookupError):

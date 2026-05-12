@@ -1,11 +1,13 @@
 """WhatsApp webhook server — standalone entry point for the WhatsApp agent."""
 
 import asyncio
+import hashlib
+import hmac
+import json
 import logging
 import os
 import random
 import time
-from collections import defaultdict
 from datetime import UTC, datetime
 from typing import Any
 
@@ -29,6 +31,7 @@ from neonize.utils.enum import ChatPresence, ChatPresenceMedia, ReceiptType, Vot
 from neonize.utils.message import extract_text, get_poll_update_message
 
 from playtomic_agent.config import get_settings
+from playtomic_agent.context import truncate_history
 from playtomic_agent.log_config import setup_logging
 from playtomic_agent.metrics import (
     VOTES_CREATED,
@@ -103,10 +106,28 @@ async def health() -> Response:
     return Response(content="WhatsApp disconnected", status_code=503)
 
 
+def _verify_webhook_signature(body: bytes, signature_header: str, secret: str) -> bool:
+    """Return True if the HMAC-SHA256 signature matches the body."""
+    if not signature_header.startswith("sha256="):
+        return False
+    expected = hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
+    received = signature_header[len("sha256="):]
+    return hmac.compare_digest(expected, received)
+
+
 @webhook_app.post("/api/webhook/consensus")
 async def consensus_webhook(req: Request):
     """Receive threshold consensus from the Web API and notify the group."""
-    data = await req.json()
+    raw_body = await req.body()
+    secret = get_settings().webhook_secret
+    if secret:
+        sig = req.headers.get("X-Webhook-Signature", "")
+        if not _verify_webhook_signature(raw_body, sig, secret):
+            logger.warning("consensus_webhook: invalid or missing signature — rejecting")
+            from fastapi import Response as _Response
+
+            return _Response(content="Forbidden", status_code=403)
+    data = json.loads(raw_body)
     group_jid = data.get("group_jid")
     display = data.get("display")
     voter_count = data.get("voter_count")
@@ -245,7 +266,7 @@ async def _handle_poll_vote(
     sender_jid: Any,
     sender_id: str,
     storage: UserStorage,
-    user_locks: defaultdict,
+    get_lock: Any,
 ) -> None:
     """Decrypt a poll vote, update the active poll tally, and notify if threshold is reached."""
     import hashlib
@@ -260,7 +281,7 @@ async def _handle_poll_vote(
         logger.debug("decrypt_poll_vote failed for %s — skipping", sender_id)
         return
 
-    async with user_locks[sender_id]:
+    async with get_lock(sender_id):
         user_state = storage.load(sender_id)
         if not user_state.active_poll:
             logger.info("Poll vote received for %s but no active_poll stored — ignoring", sender_id)
@@ -334,10 +355,15 @@ async def _handle_poll_vote(
         # SINGLE courts need 2 votes; DOUBLE courts need 4.
         # We keep the poll alive (don't clear active_poll) so other options can
         # still accumulate votes and trigger their own notifications later.
+        _settings = get_settings()
+        _single_threshold = _settings.single_court_vote_threshold
+        _double_threshold = _settings.double_court_vote_threshold
         ready = [
             o
             for o in user_state.active_poll["options"]
-            if len(o["voters"]) >= (2 if o.get("court_type") == "SINGLE" else 4)
+            if len(o["voters"]) >= (
+                _single_threshold if o.get("court_type") == "SINGLE" else _double_threshold
+            )
             and not o.get("notified")
         ]
         if ready:
@@ -345,7 +371,11 @@ async def _handle_poll_vote(
                 option["notified"] = True
             storage.save(sender_id, user_state)
             for option in ready:
-                option_threshold = 2 if option.get("court_type") == "SINGLE" else 4
+                option_threshold = (
+                    _single_threshold
+                    if option.get("court_type") == "SINGLE"
+                    else _double_threshold
+                )
                 logger.info(
                     "Poll threshold reached in %s for '%s' (%d voters)",
                     sender_id,
@@ -575,7 +605,32 @@ def main() -> None:
             platformType=_platform_int,
         ),
     )
-    user_locks: defaultdict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
+    # user_locks grows with unique senders — cleaned up periodically by _cleanup_user_locks.
+    user_locks: dict[str, asyncio.Lock] = {}
+    _user_lock_last_used: dict[str, float] = {}
+    _USER_LOCK_TTL = 3600.0  # evict locks idle for more than 1 hour
+
+    def _get_user_lock(sender_id: str) -> asyncio.Lock:
+        _user_lock_last_used[sender_id] = time.monotonic()
+        if sender_id not in user_locks:
+            user_locks[sender_id] = asyncio.Lock()
+        return user_locks[sender_id]
+
+    async def _cleanup_user_locks() -> None:
+        while True:
+            await asyncio.sleep(1800)  # run every 30 minutes
+            cutoff = time.monotonic() - _USER_LOCK_TTL
+            stale = [
+                k
+                for k, t in _user_lock_last_used.items()
+                if t < cutoff and not user_locks.get(k, asyncio.Lock()).locked()
+            ]
+            for k in stale:
+                user_locks.pop(k, None)
+                _user_lock_last_used.pop(k, None)
+            if stale:
+                logger.debug("user_locks cleanup: evicted %d stale entries", len(stale))
+
     _ready = False  # Set to True once offline sync is complete; gates on_message
 
     @client.event.paircode
@@ -764,7 +819,7 @@ def main() -> None:
             # Poll votes arrive as pollUpdateMessage — handle before direction check
             if get_poll_update_message(message):
                 await _handle_poll_vote(
-                    wa_client, message, sender_jid, sender_id, storage, user_locks
+                    wa_client, message, sender_jid, sender_id, storage, _get_user_lock
                 )
                 return
 
@@ -811,7 +866,7 @@ def main() -> None:
             quoted_raw = ""
         user_input = _prepend_quoted_context(user_input, quoted_raw)
 
-        async with user_locks[sender_id]:
+        async with _get_user_lock(sender_id):
             _msg_t0 = time.perf_counter()
             if message.Info.MessageSource.IsGroup:
                 actual_sender = message.Info.MessageSource.Sender
@@ -926,7 +981,9 @@ def main() -> None:
                 if wa_response and wa_response.text_parts
                 else final_text
             )
-            user_state.history = (messages + [{"role": "assistant", "content": history_text}])[-20:]
+            user_state.history = truncate_history(
+                messages + [{"role": "assistant", "content": history_text}]
+            )
             storage.save(sender_id, user_state)
 
             if wa_response:
@@ -956,6 +1013,7 @@ def main() -> None:
                 else None
             )
         )
+        asyncio.create_task(_cleanup_user_locks())
 
         await client.connect()
         await client.idle()

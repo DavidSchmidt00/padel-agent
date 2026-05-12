@@ -40,3 +40,19 @@ def get_language() -> str:
 def get_timezone() -> str:
     """Get the timezone for the current request."""
     return _timezone_var.get()
+
+
+def truncate_history(messages: list[dict], max_messages: int = 20) -> list[dict]:
+    """Trim a message list to at most max_messages entries.
+
+    Ensures tool call integrity: if the oldest kept message is a ToolMessage
+    (i.e. the AIMessage that issued the tool call was cut off), we keep
+    dropping from the front until the first message is a user or AI message.
+    """
+    if len(messages) <= max_messages:
+        return messages
+    trimmed = messages[-max_messages:]
+    # Drop any leading tool-result messages that lost their paired tool call
+    while trimmed and trimmed[0].get("role") == "tool":
+        trimmed = trimmed[1:]
+    return trimmed
