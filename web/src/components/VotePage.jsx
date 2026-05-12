@@ -18,6 +18,8 @@ function threshold(courtType) {
   return courtType === 'SINGLE' ? 2 : 4
 }
 
+const LS_KEY = (voteId) => `vote-${voteId}`
+
 export default function VotePage({ voteId }) {
   const { t, i18n } = useTranslation()
   const [session, setSession] = useState(null)
@@ -30,6 +32,21 @@ export default function VotePage({ voteId }) {
   const [submitError, setSubmitError] = useState(null)
   const [openPopover, setOpenPopover] = useState(null) // slot_id of open attendee popover
   const timerRef = useRef(null)
+
+  // Restore previous vote from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(LS_KEY(voteId))
+      if (saved) {
+        const { voterName: name, votes } = JSON.parse(saved)
+        setVoterName(name)
+        setSubmittedVotes(votes)
+        setPendingVotes(votes)
+      }
+    } catch {
+      // ignore malformed data
+    }
+  }, [voteId])
 
   useEffect(() => {
     if (openPopover === null) return
@@ -81,7 +98,13 @@ export default function VotePage({ voteId }) {
       setSession(prev => prev
         ? { ...prev, tally: data.tally, voter_count: data.voter_count, voters: data.voters, attendees: data.attendees }
         : prev)
-      setSubmittedVotes({ ...pendingVotes })
+      const saved = { ...pendingVotes }
+      setSubmittedVotes(saved)
+      try {
+        localStorage.setItem(LS_KEY(voteId), JSON.stringify({ voterName: voterName.trim(), votes: saved }))
+      } catch {
+        // ignore storage errors (e.g. private mode quota)
+      }
     } finally {
       setSubmitting(false)
     }
