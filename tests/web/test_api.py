@@ -88,7 +88,7 @@ def test_chat_missing_prompt_and_messages():
 # ─── /api/search tests ────────────────────────────────────────────────────────
 
 _BASE_SEARCH_BODY = {
-    "club_slug": "test-club",
+    "club_slugs": ["test-club"],
     "date_from": "2026-03-09",  # Monday
     "date_to": "2026-03-09",
     "time_windows": [{"days": [0], "start": "18:00", "end": "22:00"}],
@@ -170,7 +170,8 @@ def test_search_date_to_before_date_from():
     body = {**_BASE_SEARCH_BODY, "date_from": "2026-03-10", "date_to": "2026-03-09"}
     res = client.post("/api/search", json=body)
     assert res.status_code == 422
-    assert "date_to" in res.json()["detail"]
+    # Pydantic v2 returns detail as a list of error dicts
+    assert any("date_to" in e.get("msg", "") for e in res.json()["detail"])
 
 
 def test_search_empty_time_windows():
@@ -178,7 +179,8 @@ def test_search_empty_time_windows():
     body = {**_BASE_SEARCH_BODY, "time_windows": []}
     res = client.post("/api/search", json=body)
     assert res.status_code == 422
-    assert "time_window" in res.json()["detail"]
+    # Pydantic v2 returns detail as a list; check loc or msg for 'time_windows'
+    assert any("time_window" in str(e) for e in res.json()["detail"])
 
 
 def test_search_results_sorted(sample_slots):
