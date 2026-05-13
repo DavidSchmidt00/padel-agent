@@ -149,6 +149,45 @@ class Settings(BaseSettings):
         description="Public base URL for sharing vote links outside the dev environment.",
     )
 
+    # Vote thresholds — how many votes a slot needs before a booking reminder fires
+    single_court_vote_threshold: int = Field(
+        default=2,
+        alias="SINGLE_COURT_VOTE_THRESHOLD",
+        description="Votes required on a SINGLE court slot to trigger a booking notification.",
+    )
+    double_court_vote_threshold: int = Field(
+        default=4,
+        alias="DOUBLE_COURT_VOTE_THRESHOLD",
+        description="Votes required on a DOUBLE court slot to trigger a booking notification.",
+    )
+
+    # Webhook security — shared secret for HMAC-SHA256 signatures on internal webhooks
+    webhook_secret: str = Field(
+        default="",
+        alias="WEBHOOK_SECRET",
+        description=(
+            "Shared secret for signing internal webhook calls (web → WhatsApp). "
+            "Set to a random string in production. Empty string disables verification."
+        ),
+    )
+
+    # Search limits — guard against DoS on /api/search
+    search_max_clubs: int = Field(
+        default=5,
+        alias="SEARCH_MAX_CLUBS",
+        description="Maximum number of club slugs accepted in a single /api/search request.",
+    )
+    search_max_date_span_days: int = Field(
+        default=90,
+        alias="SEARCH_MAX_DATE_SPAN_DAYS",
+        description="Maximum date range (in days) accepted in a single /api/search request.",
+    )
+    search_max_time_windows: int = Field(
+        default=10,
+        alias="SEARCH_MAX_TIME_WINDOWS",
+        description="Maximum number of time windows accepted in a single /api/search request.",
+    )
+
     # Alerting
     whatsapp_alert_webhook_url: str | None = Field(
         default=None,

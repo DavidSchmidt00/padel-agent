@@ -1,4 +1,6 @@
 import asyncio
+import hashlib
+import hmac
 import json
 import logging
 import os
@@ -9,13 +11,14 @@ from pathlib import Path
 from typing import Literal
 from zoneinfo import ZoneInfo
 
+import httpx
 import requests
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
@@ -23,7 +26,7 @@ from slowapi.util import get_remote_address
 from playtomic_agent.client.api import PlaytomicClient
 from playtomic_agent.client.exceptions import APIError, ClubNotFoundError
 from playtomic_agent.config import get_settings
-from playtomic_agent.context import get_timezone, set_request_region
+from playtomic_agent.context import get_timezone, set_request_region, truncate_history
 from playtomic_agent.metrics import (
     VOTES_CREATED,
     WEB_MESSAGES,
@@ -84,8 +87,8 @@ async def health_check():
 
 
 class ChatRequest(BaseModel):
-    prompt: str | None = None
-    messages: list[dict] | None = None
+    prompt: str | None = Field(default=None, max_length=4000)
+    messages: list[dict] | None = Field(default=None, max_length=40)
     user_profile: dict | None = None
     # Region settings (from frontend region selector)
     country: str | None = None
@@ -110,16 +113,43 @@ class TimeWindow(BaseModel):
 
 
 class SearchRequest(BaseModel):
-    club_slugs: list[str]
+    club_slugs: list[str] = Field(min_length=1)
     club_names: list[str] = []  # parallel to club_slugs; used as display label in results
     date_from: str
     date_to: str
-    time_windows: list[TimeWindow]
+    time_windows: list[TimeWindow] = Field(min_length=1)
     duration: int | None = None
     court_type: Literal["SINGLE", "DOUBLE"] | None = None
     timezone: str | None = None
     language: str | None = None
     country: str | None = None
+
+    @model_validator(mode="after")
+    def _validate_limits(self) -> "SearchRequest":
+        settings = get_settings()
+        if len(self.club_slugs) > settings.search_max_clubs:
+            raise ValueError(
+                f"Too many clubs: max {settings.search_max_clubs}, got {len(self.club_slugs)}."
+            )
+        if len(self.time_windows) > settings.search_max_time_windows:
+            raise ValueError(
+                f"Too many time windows: max {settings.search_max_time_windows},"
+                f" got {len(self.time_windows)}."
+            )
+        try:
+            d_from = _date.fromisoformat(self.date_from)
+            d_to = _date.fromisoformat(self.date_to)
+        except ValueError as exc:
+            raise ValueError(f"Invalid date format: {exc}") from exc
+        span = (d_to - d_from).days
+        if span < 0:
+            raise ValueError("date_to must be >= date_from")
+        if span > settings.search_max_date_span_days:
+            raise ValueError(
+                f"Date range too large: max {settings.search_max_date_span_days} days,"
+                f" got {span}."
+            )
+        return self
 
 
 class SlotResult(BaseModel):
@@ -201,31 +231,33 @@ def _map_exception_to_error(exc: Exception) -> dict:
     msg = str(exc)
 
     # 1. Network / Connection Errors
-    if "ConnectError" in msg or "Network is unreachable" in msg or "socket" in msg.lower():
+    if isinstance(exc, (httpx.ConnectError, httpx.NetworkError, OSError, ConnectionError)):
         return {
             "code": "NETWORK_ERROR",
             "message": "Network connection lost. Please check your internet connection.",
             "detail": msg,
         }
 
-    # 2. Rate Limits (Google GenAI)
-    if "429" in msg or "ResourceExhausted" in msg:
+    # 2. Rate Limits — check by type first, fall back to status-code string for SDK wrappers
+    if isinstance(exc, RateLimitExceeded) or "ResourceExhausted" in msg or (
+        isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code == 429
+    ):
         return {
             "code": "RATE_LIMIT_ERROR",
             "message": "I'm receiving too many requests right now. Please try again in a minute.",
             "detail": msg,
         }
 
-    # 3. Recursion Limit (Agent getting stuck)
-    if "recursion limit" in msg.lower():
+    # 3. Recursion Limit (LangGraph agent stuck in loop)
+    if isinstance(exc, RecursionError) or "recursion limit" in msg.lower():
         return {
             "code": "RECURSION_LIMIT_ERROR",
             "message": "I thought about this for too long and got stuck. Please try rephrasing your request.",
             "detail": msg,
         }
 
-    # 4. Parsing / JSON Errors
-    if "JSONDecodeError" in msg:
+    # 4. JSON Parsing Errors
+    if isinstance(exc, (ValueError, json.JSONDecodeError)) and "json" in msg.lower():
         return {
             "code": "PARSING_ERROR",
             "message": "I couldn't understand the server response. Please try again.",
@@ -264,12 +296,7 @@ async def chat(req: ChatRequest, request: Request):  # Added request param for l
             status_code=400, detail="Either 'prompt' or 'messages' must be provided."
         )
 
-    # Token Optimization: Truncate history to last 20 messages
-    # This prevents the context window from growing indefinitely
-    if len(messages) > 20:
-        # always keep the last message (user prompt) and preceding context
-        # but ensure we don't cut off half a tool exchange if possible (LangGraph handles it, but safer to be generous)
-        messages = messages[-20:]
+    messages = truncate_history(messages)
 
     # Set context
     set_request_region(
@@ -423,7 +450,8 @@ async def chat(req: ChatRequest, request: Request):  # Added request param for l
 
 
 @app.get("/api/clubs")
-async def search_clubs_endpoint(q: str = "") -> list[ClubResult]:
+@limiter.limit("60/minute")
+async def search_clubs_endpoint(request: Request, q: str = "") -> list[ClubResult]:
     """Search for clubs by name. Returns matching clubs with name and slug."""
     if len(q) < 2:
         return []
@@ -436,20 +464,15 @@ async def search_clubs_endpoint(q: str = "") -> list[ClubResult]:
 
 
 @app.post("/api/search", response_model=SearchResponse)
-async def search_slots(req: SearchRequest):
+@limiter.limit("20/minute")
+async def search_slots(req: SearchRequest, request: Request):
     """Scan for available slots across a date range and time windows, bypassing the LLM."""
-    # 1. Validate inputs
-    if not req.club_slugs:
-        raise HTTPException(status_code=422, detail="At least one club_slug is required.")
+    # 1. Parse dates (validated by SearchRequest._validate_limits; needed as objects below)
     try:
         d_from = _date.fromisoformat(req.date_from)
         d_to = _date.fromisoformat(req.date_to)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail="Invalid date format. Use YYYY-MM-DD.") from exc
-    if d_to < d_from:
-        raise HTTPException(status_code=422, detail="date_to must be >= date_from.")
-    if not req.time_windows:
-        raise HTTPException(status_code=422, detail="At least one time_window is required.")
 
     # 2. Set request context
     set_request_region(country=req.country, language=req.language, timezone=req.timezone)
@@ -534,9 +557,22 @@ async def get_vote_session(vote_id: str):
     return session
 
 
+def _sign_webhook_payload(payload: dict, secret: str) -> str:
+    """Return HMAC-SHA256 hex digest of the JSON-serialised payload."""
+    body = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+    return hmac.new(secret.encode(), body.encode(), hashlib.sha256).hexdigest()
+
+
 def _fire_webhook(url: str, payload: dict) -> None:
+    # Serialize with the same settings used by _sign_webhook_payload so the
+    # raw body the receiver hashes matches what was signed here.
+    body = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+    headers: dict[str, str] = {"Content-Type": "application/json"}
+    secret = get_settings().webhook_secret
+    if secret:
+        headers["X-Webhook-Signature"] = f"sha256={_sign_webhook_payload(payload, secret)}"
     try:
-        requests.post(url, json=payload, timeout=5)
+        requests.post(url, data=body, headers=headers, timeout=5)
     except Exception as exc:
         logger.error(f"Failed to fire webhook {url}: {exc}")
 
@@ -559,10 +595,15 @@ async def cast_vote(vote_id: str, req: CastVoteRequest, background_tasks: Backgr
     group_jid = metadata.get("group_jid")
 
     if group_jid:
-        webhook_url = get_settings().whatsapp_webhook_url
+        _settings = get_settings()
+        webhook_url = _settings.whatsapp_webhook_url
         for sid, count in session["tally"].items():
             slot_info = next((s for s in session["slots"] if s["slot_id"] == sid), None)
-            slot_threshold = 2 if slot_info and slot_info.get("court_type") == "SINGLE" else 4
+            slot_threshold = (
+                _settings.single_court_vote_threshold
+                if slot_info and slot_info.get("court_type") == "SINGLE"
+                else _settings.double_court_vote_threshold
+            )
             if count >= slot_threshold and sid not in notified_slots:
                 if slot_info:
                     vote_store.mark_notified(vote_id, sid)
