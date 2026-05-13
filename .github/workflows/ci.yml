@@ -10,7 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GEMINI_API_KEY: dummy
-      VIRTUAL_ENV: .venv
     steps:
       - uses: actions/checkout@v4
 
@@ -19,26 +18,19 @@ jobs:
           python-version: "3.11"
 
       - name: Install uv
-        run: pip install uv
-
-      - name: Cache virtualenv
-        id: cache-venv
-        uses: actions/cache@v4
+        uses: astral-sh/setup-uv@v5
         with:
-          path: .venv
-          key: venv-${{ runner.os }}-py3.11-${{ hashFiles('pyproject.toml') }}
+          enable-caching: true
+          cache-dependency-glob: "pyproject.toml"
 
       - name: Install dependencies
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        run: |
-          uv venv .venv
-          uv pip install -e ".[dev]"
+        run: uv pip install --system -e ".[dev]"
 
       - name: Lint (ruff)
-        run: .venv/bin/ruff check src/
+        run: ruff check src/
 
       - name: Type-check (mypy)
-        run: .venv/bin/mypy src/
+        run: mypy src/
 
       - name: Test (pytest)
-        run: .venv/bin/pytest
+        run: pytest
