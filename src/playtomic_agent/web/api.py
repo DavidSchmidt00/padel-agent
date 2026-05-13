@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Literal
 from zoneinfo import ZoneInfo
 
+import httpx
 import requests
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -138,8 +139,8 @@ class SearchRequest(BaseModel):
         try:
             d_from = _date.fromisoformat(self.date_from)
             d_to = _date.fromisoformat(self.date_to)
-        except ValueError:
-            return self  # will be caught by the endpoint validator
+        except ValueError as exc:
+            raise ValueError(f"Invalid date format: {exc}") from exc
         span = (d_to - d_from).days
         if span > settings.search_max_date_span_days:
             raise ValueError(
@@ -226,8 +227,6 @@ def _extract_text(m) -> str | None:
 def _map_exception_to_error(exc: Exception) -> dict:
     """Map exceptions to standard error codes and friendly messages."""
     import json as _json
-
-    import httpx
 
     msg = str(exc)
 

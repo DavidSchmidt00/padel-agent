@@ -124,9 +124,7 @@ async def consensus_webhook(req: Request):
         sig = req.headers.get("X-Webhook-Signature", "")
         if not _verify_webhook_signature(raw_body, sig, secret):
             logger.warning("consensus_webhook: invalid or missing signature — rejecting")
-            from fastapi import Response as _Response
-
-            return _Response(content="Forbidden", status_code=403)
+            return Response(content="Forbidden", status_code=403)
     data = json.loads(raw_body)
     group_jid = data.get("group_jid")
     display = data.get("display")
@@ -623,7 +621,7 @@ def main() -> None:
             stale = [
                 k
                 for k, t in _user_lock_last_used.items()
-                if t < cutoff and not user_locks.get(k, asyncio.Lock()).locked()
+                if t < cutoff and not user_locks[k].locked()
             ]
             for k in stale:
                 user_locks.pop(k, None)
