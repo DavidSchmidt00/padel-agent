@@ -1,7 +1,6 @@
 """Tests for per-option court_type threshold in native WhatsApp polls."""
 
 import asyncio
-from collections import defaultdict
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -108,7 +107,12 @@ async def test_handle_poll_vote_single_fires_at_2_double_silent():
     poll_vote.selectedOptions = []  # no new selections from this voter
 
     sender_jid = MagicMock()
-    user_locks: defaultdict = defaultdict(asyncio.Lock)
+    _locks: dict[str, asyncio.Lock] = {}
+
+    def get_lock(sid: str) -> asyncio.Lock:
+        if sid not in _locks:
+            _locks[sid] = asyncio.Lock()
+        return _locks[sid]
 
     # Patch get_poll_update_message to return a non-None value (triggering processing)
     mock_poll_update = MagicMock()
@@ -142,7 +146,7 @@ async def test_handle_poll_vote_single_fires_at_2_double_silent():
         single_hash = hashlib.sha256(b"SINGLE slot").digest()
         poll_vote.selectedOptions = [single_hash]
 
-        await _handle_poll_vote(wa_client, message, sender_jid, "g1@g.us", storage, user_locks)
+        await _handle_poll_vote(wa_client, message, sender_jid, "g1@g.us", storage, get_lock)
 
     # Only SINGLE option should have notified (2 votes == threshold 2)
     assert len(notified_options) == 1
@@ -180,7 +184,13 @@ async def test_handle_poll_vote_double_fires_at_4():
     wa_client = MagicMock()
     wa_client.decrypt_poll_vote = AsyncMock(return_value=MagicMock())
 
-    user_locks: defaultdict = defaultdict(asyncio.Lock)
+    _locks2: dict[str, asyncio.Lock] = {}
+
+    def get_lock(sid: str) -> asyncio.Lock:
+        if sid not in _locks2:
+            _locks2[sid] = asyncio.Lock()
+        return _locks2[sid]
+
     message = MagicMock()
     message.Info.MessageSource.Sender.User = "u4"
     message.Info.MessageSource.Sender.Server = "s"
@@ -208,7 +218,7 @@ async def test_handle_poll_vote_double_fires_at_4():
             side_effect=fake_notify,
         ),
     ):
-        await _handle_poll_vote(wa_client, message, MagicMock(), "g1@g.us", storage, user_locks)
+        await _handle_poll_vote(wa_client, message, MagicMock(), "g1@g.us", storage, get_lock)
 
     assert len(notified_options) == 1
     assert notified_options[0][0] == "DOUBLE slot"

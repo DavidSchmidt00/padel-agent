@@ -210,11 +210,7 @@ def find_clubs_by_location(
     from playtomic_agent.context import get_country
 
     try:
-        try:
-            country = get_country()
-        except (ImportError, LookupError):
-            country = None
-
+        country = get_country()
         with PlaytomicClient() as client:
             coordinates = client.geocode(query, country_code=country)
             if not coordinates:

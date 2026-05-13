@@ -142,6 +142,8 @@ class SearchRequest(BaseModel):
         except ValueError as exc:
             raise ValueError(f"Invalid date format: {exc}") from exc
         span = (d_to - d_from).days
+        if span < 0:
+            raise ValueError("date_to must be >= date_from")
         if span > settings.search_max_date_span_days:
             raise ValueError(
                 f"Date range too large: max {settings.search_max_date_span_days} days,"
@@ -226,8 +228,6 @@ def _extract_text(m) -> str | None:
 
 def _map_exception_to_error(exc: Exception) -> dict:
     """Map exceptions to standard error codes and friendly messages."""
-    import json as _json
-
     msg = str(exc)
 
     # 1. Network / Connection Errors
@@ -257,7 +257,7 @@ def _map_exception_to_error(exc: Exception) -> dict:
         }
 
     # 4. JSON Parsing Errors
-    if isinstance(exc, (ValueError, _json.JSONDecodeError)) and "json" in msg.lower():
+    if isinstance(exc, (ValueError, json.JSONDecodeError)) and "json" in msg.lower():
         return {
             "code": "PARSING_ERROR",
             "message": "I couldn't understand the server response. Please try again.",
@@ -467,18 +467,12 @@ async def search_clubs_endpoint(request: Request, q: str = "") -> list[ClubResul
 @limiter.limit("20/minute")
 async def search_slots(req: SearchRequest, request: Request):
     """Scan for available slots across a date range and time windows, bypassing the LLM."""
-    # 1. Validate inputs
-    if not req.club_slugs:
-        raise HTTPException(status_code=422, detail="At least one club_slug is required.")
+    # 1. Parse dates (validated by SearchRequest._validate_limits; needed as objects below)
     try:
         d_from = _date.fromisoformat(req.date_from)
         d_to = _date.fromisoformat(req.date_to)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail="Invalid date format. Use YYYY-MM-DD.") from exc
-    if d_to < d_from:
-        raise HTTPException(status_code=422, detail="date_to must be >= date_from.")
-    if not req.time_windows:
-        raise HTTPException(status_code=422, detail="At least one time_window is required.")
 
     # 2. Set request context
     set_request_region(country=req.country, language=req.language, timezone=req.timezone)
@@ -570,12 +564,15 @@ def _sign_webhook_payload(payload: dict, secret: str) -> str:
 
 
 def _fire_webhook(url: str, payload: dict) -> None:
-    headers: dict[str, str] = {}
+    # Serialize with the same settings used by _sign_webhook_payload so the
+    # raw body the receiver hashes matches what was signed here.
+    body = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+    headers: dict[str, str] = {"Content-Type": "application/json"}
     secret = get_settings().webhook_secret
     if secret:
         headers["X-Webhook-Signature"] = f"sha256={_sign_webhook_payload(payload, secret)}"
     try:
-        requests.post(url, json=payload, headers=headers, timeout=5)
+        requests.post(url, data=body, headers=headers, timeout=5)
     except Exception as exc:
         logger.error(f"Failed to fire webhook {url}: {exc}")
 
