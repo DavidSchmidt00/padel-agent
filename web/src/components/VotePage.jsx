@@ -30,7 +30,9 @@ export default function VotePage({ voteId }) {
   const [submittedVotes, setSubmittedVotes] = useState(null) // {slot_id: bool|undefined} after submit
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(null)
+  const [availability, setAvailability] = useState({}) // {slot_id: true|false|null}
   const timerRef = useRef(null)
+  const availTimerRef = useRef(null)
 
   // Restore previous vote from localStorage on mount
   useEffect(() => {
@@ -67,6 +69,28 @@ export default function VotePage({ voteId }) {
     timerRef.current = setInterval(fetchSession, 3000)
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [fetchSession])
+
+  const fetchAvailability = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/votes/${voteId}/availability`)
+      if (!res.ok) return
+      const data = await res.json()
+      setAvailability(data.availability ?? {})
+    } catch {
+      // best-effort — silently ignore
+    }
+  }, [voteId])
+
+  useEffect(() => {
+    fetchAvailability()
+    availTimerRef.current = setInterval(fetchAvailability, 60000)
+    const onVisible = () => { if (!document.hidden) fetchAvailability() }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      if (availTimerRef.current) clearInterval(availTimerRef.current)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, [fetchAvailability])
 
   async function handleSubmitVotes() {
     if (!voterName.trim() || submitting) return
@@ -195,6 +219,14 @@ export default function VotePage({ voteId }) {
                   </span>
                 </span>
               </div>
+
+              {/* Availability badge */}
+              {availability[slot.slot_id] === true && (
+                <span className="slot-avail-badge slot-avail-badge--ok">✓ {t('votePage.avail_available')}</span>
+              )}
+              {availability[slot.slot_id] === false && (
+                <span className="slot-avail-badge slot-avail-badge--gone">✗ {t('votePage.avail_unavailable')}</span>
+              )}
 
               {/* Progress bar */}
               <div style={{ width: '100%', height: '4px', borderRadius: '2px', background: 'var(--border-color)' }}>
