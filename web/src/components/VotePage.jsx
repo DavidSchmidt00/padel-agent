@@ -30,7 +30,6 @@ export default function VotePage({ voteId }) {
   const [submittedVotes, setSubmittedVotes] = useState(null) // {slot_id: bool|undefined} after submit
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(null)
-  const [openPopover, setOpenPopover] = useState(null) // slot_id of open attendee popover
   const timerRef = useRef(null)
 
   // Restore previous vote from localStorage on mount
@@ -47,13 +46,6 @@ export default function VotePage({ voteId }) {
       // ignore malformed data
     }
   }, [voteId])
-
-  useEffect(() => {
-    if (openPopover === null) return
-    const close = () => setOpenPopover(null)
-    document.addEventListener('click', close, { capture: true, once: true })
-    return () => document.removeEventListener('click', close, { capture: true })
-  }, [openPopover])
 
   const fetchSession = useCallback(async () => {
     try {
@@ -130,7 +122,14 @@ export default function VotePage({ voteId }) {
 
   return (
     <div className="find-container">
-      <h2 style={{ margin: '0 0 14px', fontSize: '1.1rem' }}>🗳️ {t('votePage.title')}</h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+        <h2 style={{ margin: 0, fontSize: '1.1rem' }}>🗳️ {t('votePage.title')}</h2>
+        {submittedVotes !== null && (
+          <button className="vote-change-top-btn" onClick={handleChangeVote}>
+            ✏️ {t('votePage.change_vote')}
+          </button>
+        )}
+      </div>
 
       {/* Name input (shown until votes submitted) */}
       {submittedVotes === null && (
@@ -190,32 +189,10 @@ export default function VotePage({ voteId }) {
                 <span className="find-slot-time">{formatDate(slot.date)} {slot.local_time}</span>
                 <span className="find-slot-court" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '200px' }}>{slot.court}</span>
                 <span className="find-slot-meta">{slot.duration} min</span>
-                <span style={{ marginLeft: 'auto', position: 'relative' }}>
-                  <button
-                    onClick={() => slotAttendees.length > 0 && setOpenPopover(openPopover === slot.slot_id ? null : slot.slot_id)}
-                    style={{
-                      background: 'none', border: 'none', padding: 0,
-                      fontSize: '0.8rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap',
-                      cursor: slotAttendees.length > 0 ? 'pointer' : 'default',
-                      textDecoration: 'none',
-                    }}
-                  >
+                <span style={{ marginLeft: 'auto' }}>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                     <span className="attendees-label">{t('votePage.attendees')}: </span>{yesCount}/{thresh}
-                  </button>
-                  {openPopover === slot.slot_id && (
-                    <div
-                      onClick={() => setOpenPopover(null)}
-                      style={{
-                        position: 'absolute', right: 0, top: '100%', marginTop: '6px', zIndex: 10,
-                        background: 'var(--bg-surface)', border: '1px solid var(--border-color)',
-                        borderRadius: 'var(--radius-sm)', padding: '8px 12px',
-                        fontSize: '0.8rem', color: 'var(--text-primary)', whiteSpace: 'nowrap',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
-                      }}
-                    >
-                      {slotAttendees.join(', ')}
-                    </div>
-                  )}
+                  </span>
                 </span>
               </div>
 
@@ -226,6 +203,15 @@ export default function VotePage({ voteId }) {
                   width: `${pct}%`, transition: 'width 0.4s ease',
                 }} />
               </div>
+
+              {/* Voter name chips — always visible, no click needed */}
+              {slotAttendees.length > 0 && (
+                <div className="vote-attendee-chips">
+                  {slotAttendees.map(name => (
+                    <span key={name} className="vote-attendee-chip">👤 {name}</span>
+                  ))}
+                </div>
+              )}
 
               {/* Can attend toggle + book button */}
               <div style={{ display: 'flex', gap: '6px', alignItems: 'center', width: '100%' }}>

@@ -611,6 +611,29 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
 
       {results !== null && (
         <div className="find-results">
+          {/* Vote URL banner — shown prominently at the top when a vote link has been created */}
+          {voteUrl && (
+            <div className="vote-url-banner">
+              <div className="vote-url-banner-inner">
+                <span className="vote-url-banner-label">🔗 {t('vote.share_label')}</span>
+                <div className="vote-footer-share-row">
+                  <code className="vote-footer-url">{voteUrl}</code>
+                  <button className="vote-footer-copy-btn" onClick={handleCopyVoteUrl}>
+                    {voteCopied ? t('vote.copied') : t('vote.copy_btn')}
+                  </button>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="vote-url-banner-close"
+                onClick={() => { setVoteMode(false); setVoteUrl(null) }}
+                title={t('vote.close_btn')}
+              >
+                ×
+              </button>
+            </div>
+          )}
+
           {summary && summary.count > 0 && (
             <p className="find-summary">
               {t('findMode.results_summary', { count: summary.count, days: summary.days })}
