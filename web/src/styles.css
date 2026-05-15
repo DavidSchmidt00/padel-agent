@@ -1921,18 +1921,24 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
   margin-bottom: 14px;
 }
 
 .vote-page-title {
   margin: 0;
   font-size: 1.1rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .vote-page-header-actions {
   display: flex;
   gap: 6px;
   align-items: center;
+  flex-shrink: 0;
 }
 
 /* Who-has-voted line */
@@ -2275,15 +2281,15 @@ body {
   background: none;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  padding: 0.25rem 0.5rem;
+  padding: 0.3rem 0.6rem;
   font-size: 0.78rem;
-  line-height: 1;
   cursor: pointer;
   color: var(--text-tertiary);
   display: flex;
   align-items: center;
   gap: 4px;
   font-family: inherit;
+  white-space: nowrap;
   transition: color 0.12s, background 0.12s, border-color 0.12s;
 }
 
@@ -2291,7 +2297,8 @@ body {
   font-size: 0.72rem;
 }
 
-@media (max-width: 360px) {
+/* Hide text label on phones — icon-only saves space and avoids alignment issues */
+@media (max-width: 560px) {
   .vote-admin-label { display: none; }
 }
 
@@ -2319,6 +2326,8 @@ body {
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
   transition: background 0.12s, color 0.12s, border-color 0.12s;
 }
 

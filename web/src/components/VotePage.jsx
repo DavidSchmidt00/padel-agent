@@ -152,6 +152,10 @@ export default function VotePage({ voteId }) {
       if (!res.ok) { setBookingError(t('votePage.booking_error')); return }
       const data = await res.json()
       setBookedSlots(new Set(data.booked_slots ?? []))
+      // Clear cached availability so the slot shows "checking" immediately,
+      // then fire a fresh check without waiting for the 60s poll.
+      setAvailability(prev => { const n = { ...prev }; delete n[slotId]; return n })
+      fetchAvailability()
     } catch {
       setBookingError(t('votePage.booking_error'))
     } finally {
