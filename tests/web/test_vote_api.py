@@ -338,3 +338,33 @@ def test_mark_slot_booked_422_unknown_slot():
     with _patched(_mock_store()):
         res = client.post("/api/votes/testvote/slots/badslot/book")
     assert res.status_code == 422
+
+
+# --- DELETE /api/votes/{vote_id}/slots/{slot_id}/book ---
+
+
+def test_unmark_slot_booked_200():
+    session_with_booked = {**_MOCK_SESSION, "booked_slots": ["s1"]}
+    unbooked_session = {**_MOCK_SESSION, "booked_slots": []}
+    m = _mock_store()
+    m.get.side_effect = [session_with_booked, unbooked_session]
+    with _patched(m):
+        res = client.delete("/api/votes/testvote/slots/s1/book")
+    assert res.status_code == 200
+    data = res.json()
+    assert "s1" not in data["booked_slots"]
+    m.unmark_booked.assert_called_once_with("testvote", "s1")
+
+
+def test_unmark_slot_booked_404_unknown_vote():
+    m = MagicMock()
+    m.get.return_value = None
+    with _patched(m):
+        res = client.delete("/api/votes/nosuch/slots/s1/book")
+    assert res.status_code == 404
+
+
+def test_unmark_slot_booked_422_unknown_slot():
+    with _patched(_mock_store()):
+        res = client.delete("/api/votes/testvote/slots/badslot/book")
+    assert res.status_code == 422

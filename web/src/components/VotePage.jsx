@@ -144,6 +144,21 @@ export default function VotePage({ voteId }) {
     }
   }
 
+  async function handleUnmarkBooked(slotId) {
+    setBookingSlot(slotId)
+    setBookingError(null)
+    try {
+      const res = await fetch(`/api/votes/${voteId}/slots/${slotId}/book`, { method: 'DELETE' })
+      if (!res.ok) { setBookingError(t('votePage.booking_error')); return }
+      const data = await res.json()
+      setBookedSlots(new Set(data.booked_slots ?? []))
+    } catch {
+      setBookingError(t('votePage.booking_error'))
+    } finally {
+      setBookingSlot(null)
+    }
+  }
+
   function handleChangeVote() {
     setPendingVotes({ ...submittedVotes })
     setSubmittedVotes(null)
@@ -292,6 +307,16 @@ export default function VotePage({ voteId }) {
                       <span className="vote-mark-booked-circle" aria-hidden="true">
                         {bookingSlot === slot.slot_id ? '…' : '📌'}
                       </span>
+                    </button>
+                  )}
+                  {adminMode && isBooked && (
+                    <button
+                      className="vote-unmark-booked-btn"
+                      disabled={bookingSlot === slot.slot_id}
+                      onClick={() => handleUnmarkBooked(slot.slot_id)}
+                      aria-label={t('votePage.unmark_booked')}
+                    >
+                      {bookingSlot === slot.slot_id ? '…' : t('votePage.unmark_booked')}
                     </button>
                   )}
                   <button

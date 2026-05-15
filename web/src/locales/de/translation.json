@@ -165,6 +165,7 @@
         "avail_unavailable": "Nicht mehr verfügbar",
         "avail_booked": "Bereits für uns gebucht",
         "mark_booked": "Als gebucht markieren",
+        "unmark_booked": "Buchung rückgängig",
         "booking_error": "Konnte nicht als gebucht markiert werden. Bitte erneut versuchen.",
         "consensus_title": "Einigkeit erreicht! 🎉",
         "consensus_body": "Jetzt buchen, bevor der Slot weg ist:",
