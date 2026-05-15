@@ -62,6 +62,7 @@ class VoteStore:
                 for col, default in [
                     ("metadata_json", "'{}'"),
                     ("notified_slots", "'[]'"),
+                    ("booked_slots", "'[]'"),
                 ]:
                     try:
                         conn.execute(
@@ -117,7 +118,10 @@ class VoteStore:
         conn = self._connect()
         try:
             row = conn.execute(
-                "SELECT slots_json, IFNULL(metadata_json, '{}') as metadata_json, IFNULL(notified_slots, '[]') as notified_slots FROM vote_sessions WHERE vote_id=?",
+                "SELECT slots_json, IFNULL(metadata_json, '{}') as metadata_json,"
+                " IFNULL(notified_slots, '[]') as notified_slots,"
+                " IFNULL(booked_slots, '[]') as booked_slots"
+                " FROM vote_sessions WHERE vote_id=?",
                 (vote_id,),
             ).fetchone()
             if row is None:
@@ -126,6 +130,7 @@ class VoteStore:
             slots = json.loads(row["slots_json"])
             metadata = json.loads(row["metadata_json"])
             notified_slots = json.loads(row["notified_slots"])
+            booked_slots = json.loads(row["booked_slots"])
 
             # Expire the day after the latest slot date
             if slots:
@@ -160,6 +165,7 @@ class VoteStore:
             "attendees": attendees,
             "metadata": metadata,
             "notified_slots": notified_slots,
+            "booked_slots": booked_slots,
         }
 
     def record_vote(self, vote_id: str, voter: str, votes: dict[str, bool]) -> dict[str, Any]:
@@ -213,6 +219,26 @@ class VoteStore:
                 conn.execute(
                     "UPDATE vote_sessions SET notified_slots=? WHERE vote_id=?",
                     (json.dumps(list(notified)), vote_id),
+                )
+        finally:
+            conn.close()
+
+    def mark_booked(self, vote_id: str, slot_id: str) -> None:
+        """Mark a slot as booked by the group (persists across all viewers)."""
+        conn = self._connect()
+        try:
+            with conn:
+                row = conn.execute(
+                    "SELECT IFNULL(booked_slots, '[]') FROM vote_sessions WHERE vote_id=?",
+                    (vote_id,),
+                ).fetchone()
+                if row is None:
+                    return
+                booked = set(json.loads(row[0]))
+                booked.add(slot_id)
+                conn.execute(
+                    "UPDATE vote_sessions SET booked_slots=? WHERE vote_id=?",
+                    (json.dumps(list(booked)), vote_id),
                 )
         finally:
             conn.close()

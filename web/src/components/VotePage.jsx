@@ -31,6 +31,8 @@ export default function VotePage({ voteId }) {
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(null)
   const [availability, setAvailability] = useState({}) // {slot_id: true|false|null}
+  const [bookedSlots, setBookedSlots] = useState(new Set())
+  const [bookingSlot, setBookingSlot] = useState(null) // slot_id currently being marked
   const timerRef = useRef(null)
   const availTimerRef = useRef(null)
 
@@ -58,7 +60,9 @@ export default function VotePage({ voteId }) {
         return
       }
       if (!res.ok) return
-      setSession(await res.json())
+      const data = await res.json()
+      setSession(data)
+      if (data.booked_slots?.length) setBookedSlots(new Set(data.booked_slots))
     } finally {
       setLoading(false)
     }
@@ -123,6 +127,18 @@ export default function VotePage({ voteId }) {
       }
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  async function handleMarkBooked(slotId) {
+    setBookingSlot(slotId)
+    try {
+      const res = await fetch(`/api/votes/${voteId}/slots/${slotId}/book`, { method: 'POST' })
+      if (!res.ok) return
+      setBookedSlots(prev => new Set([...prev, slotId]))
+      setAvailability(prev => ({ ...prev, [slotId]: null }))
+    } finally {
+      setBookingSlot(null)
     }
   }
 
@@ -220,13 +236,13 @@ export default function VotePage({ voteId }) {
                 </span>
               </div>
 
-              {/* Availability badge */}
-              {availability[slot.slot_id] === true && (
-                <span className="slot-avail-badge slot-avail-badge--ok">✓ {t('votePage.avail_available')}</span>
-              )}
-              {availability[slot.slot_id] === false && (
-                <span className="slot-avail-badge slot-avail-badge--gone">✗ {t('votePage.avail_unavailable')}</span>
-              )}
+              {/* Availability / booked badge */}
+              {bookedSlots.has(slot.slot_id)
+                ? <span className="slot-avail-badge slot-avail-badge--booked">🎾 {t('votePage.avail_booked')}</span>
+                : availability[slot.slot_id] === true
+                  ? <span className="slot-avail-badge slot-avail-badge--ok">✓ {t('votePage.avail_available')}</span>
+                  : null
+              }
 
               {/* Progress bar */}
               <div style={{ width: '100%', height: '4px', borderRadius: '2px', background: 'var(--border-color)' }}>
@@ -264,10 +280,24 @@ export default function VotePage({ voteId }) {
                 >
                   ✓ {t('votePage.can_attend')}
                 </button>
+                {isWinner && !bookedSlots.has(slot.slot_id) && (
+                  <button
+                    className="slot-mark-booked-btn"
+                    disabled={bookingSlot === slot.slot_id}
+                    onClick={() => handleMarkBooked(slot.slot_id)}
+                    style={{ marginLeft: 'auto' }}
+                  >
+                    {bookingSlot === slot.slot_id ? '…' : t('votePage.mark_booked')}
+                  </button>
+                )}
                 <a
-                  href={isWinner ? slot.booking_link : undefined}
+                  href={isWinner && !bookedSlots.has(slot.slot_id) ? slot.booking_link : undefined}
                   className="find-book-btn"
-                  style={{ marginLeft: 'auto', visibility: isWinner ? 'visible' : 'hidden', pointerEvents: isWinner ? 'auto' : 'none' }}
+                  style={{
+                    marginLeft: isWinner && !bookedSlots.has(slot.slot_id) ? '0' : 'auto',
+                    visibility: isWinner && !bookedSlots.has(slot.slot_id) ? 'visible' : 'hidden',
+                    pointerEvents: isWinner && !bookedSlots.has(slot.slot_id) ? 'auto' : 'none',
+                  }}
                   target="_blank"
                   rel="noopener noreferrer"
                 >

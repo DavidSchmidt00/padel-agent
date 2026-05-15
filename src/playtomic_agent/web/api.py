@@ -149,8 +149,7 @@ class SearchRequest(BaseModel):
             raise ValueError("date_to must be >= date_from")
         if span > settings.search_max_date_span_days:
             raise ValueError(
-                f"Date range too large: max {settings.search_max_date_span_days} days,"
-                f" got {span}."
+                f"Date range too large: max {settings.search_max_date_span_days} days, got {span}."
             )
         return self
 
@@ -242,8 +241,10 @@ def _map_exception_to_error(exc: Exception) -> dict:
         }
 
     # 2. Rate Limits — check by type first, fall back to status-code string for SDK wrappers
-    if isinstance(exc, RateLimitExceeded) or "ResourceExhausted" in msg or (
-        isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code == 429
+    if (
+        isinstance(exc, RateLimitExceeded)
+        or "ResourceExhausted" in msg
+        or (isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code == 429)
     ):
         return {
             "code": "RATE_LIMIT_ERROR",
@@ -584,9 +585,7 @@ def _parse_booking_link(link: str) -> dict | None:
         return None
 
 
-def _check_slots_availability_sync(
-    slots: list[dict], api_base_url: str
-) -> dict[str, bool | None]:
+def _check_slots_availability_sync(slots: list[dict], api_base_url: str) -> dict[str, bool | None]:
     """Synchronous Playtomic availability check — call via asyncio.to_thread."""
     result: dict[str, bool | None] = {}
     parsed_slots: list[tuple[str, dict]] = []
@@ -652,20 +651,46 @@ async def get_vote_session(vote_id: str):
 
 @app.get("/api/votes/{vote_id}/availability")
 async def get_vote_availability(vote_id: str):
-    """Check whether each slot in a vote session is still bookable on Playtomic."""
+    """Check whether each slot in a vote session is still bookable on Playtomic.
+
+    Booked slots (marked by the group) are excluded from the live check and
+    returned with availability=None so the frontend shows the booked badge instead.
+    """
     session = _get_vote_store().get(vote_id)
     if session is None:
         raise HTTPException(status_code=404, detail="Vote session not found or expired.")
+
+    booked: set[str] = set(session.get("booked_slots") or [])
+    slots_to_check = [s for s in session["slots"] if s["slot_id"] not in booked]
+
     settings = get_settings()
     try:
         availability = await asyncio.to_thread(
             _check_slots_availability_sync,
-            session["slots"],
+            slots_to_check,
             settings.playtomic_api_base_url,
         )
     except Exception as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    # Booked slots are returned as None — frontend treats them separately
+    for slot_id in booked:
+        availability[slot_id] = None
     return {"availability": availability}
+
+
+@app.post("/api/votes/{vote_id}/slots/{slot_id}/book", status_code=200)
+async def mark_slot_booked(vote_id: str, slot_id: str):
+    """Mark a slot as booked by the group. Visible to everyone with the link."""
+    store = _get_vote_store()
+    session = store.get(vote_id)
+    if session is None:
+        raise HTTPException(status_code=404, detail="Vote session not found or expired.")
+    valid_ids = {s["slot_id"] for s in session["slots"]}
+    if slot_id not in valid_ids:
+        raise HTTPException(status_code=422, detail="Unknown slot_id.")
+    store.mark_booked(vote_id, slot_id)
+    return {"booked_slots": list(set(session.get("booked_slots") or []) | {slot_id})}
 
 
 def _sign_webhook_payload(payload: dict, secret: str) -> str:
