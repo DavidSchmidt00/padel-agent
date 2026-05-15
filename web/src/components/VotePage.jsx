@@ -79,7 +79,7 @@ export default function VotePage({ voteId }) {
       const data = await res.json()
       setAvailability(data.availability ?? {})
     } catch {
-      // best-effort — silently ignore
+      // best-effort
     }
   }, [voteId])
 
@@ -165,9 +165,9 @@ export default function VotePage({ voteId }) {
     <div className="find-container">
 
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-        <h2 style={{ margin: 0, fontSize: '1.1rem' }}>🗳️ {t('votePage.title')}</h2>
-        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+      <div className="vote-page-header">
+        <h2 className="vote-page-title">🗳️ {t('votePage.title')}</h2>
+        <div className="vote-page-header-actions">
           {submittedVotes !== null && (
             <button className="vote-change-top-btn" onClick={handleChangeVote}>
               ✏️ {t('votePage.change_vote')}
@@ -197,19 +197,19 @@ export default function VotePage({ voteId }) {
         </div>
       )}
 
-      {/* Voter list */}
+      {/* Who has voted */}
       {session?.voters?.length > 0 && (
-        <p style={{ margin: '0 0 12px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+        <p className="vote-voters-line">
           {session.voters.join(' · ')}
           {' '}
-          <span style={{ color: 'var(--text-tertiary)' }}>
+          <span className="vote-voters-count">
             ({t('votePage.voters_label', { count: session.voter_count })})
           </span>
         </p>
       )}
 
-      {/* Slot list */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      {/* Slot cards */}
+      <div className="vote-cards">
         {session?.slots.map(slot => {
           const yesCount = session.tally[slot.slot_id] || 0
           const slotAttendees = session.attendees?.[slot.slot_id] ?? []
@@ -221,98 +221,81 @@ export default function VotePage({ voteId }) {
             ? (submittedVotes[slot.slot_id] ?? false)
             : pendingVotes[slot.slot_id]
 
-          const availBadge = isBooked
-            ? <span className="slot-avail-badge slot-avail-badge--booked">🎾 {t('votePage.avail_booked')}</span>
-            : availability[slot.slot_id] === true
-              ? <span className="slot-avail-badge slot-avail-badge--ok">✓ {t('votePage.avail_available')}</span>
-              : availability[slot.slot_id] === false
-                ? <span className="slot-avail-badge slot-avail-badge--gone">✗ {t('votePage.avail_unavailable')}</span>
-                : null
+          const availStatus = isBooked ? 'booked'
+            : availability[slot.slot_id] === true ? 'ok'
+            : availability[slot.slot_id] === false ? 'gone'
+            : 'unknown'
 
           return (
             <div
               key={slot.slot_id}
-              className="find-slot"
-              style={{
-                flexDirection: 'column', alignItems: 'flex-start', gap: '7px',
-                borderColor: isWinner ? 'rgba(6,182,212,0.5)' : undefined,
-                background: isWinner ? 'var(--accent-subtle)' : undefined,
-              }}
+              className={`vote-card${isWinner ? ' vote-card--winner' : ''}`}
+              data-avail={availStatus}
             >
-              {/* Row 1: date/court info + availability badge */}
-              <div style={{ display: 'flex', width: '100%', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                <span style={{
-                  fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase',
-                  letterSpacing: '0.05em', padding: '1px 6px', borderRadius: '4px',
-                  background: 'rgba(6,182,212,0.15)', color: 'var(--accent)', whiteSpace: 'nowrap',
-                }}>{weekday(slot.date, i18n.language)}</span>
-                <span className="find-slot-time">{formatDate(slot.date)} {slot.local_time}</span>
-                <span className="find-slot-court" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '160px' }}>{slot.court}</span>
-                <span className="find-slot-meta">{slot.duration} min</span>
-                {availBadge && <span style={{ marginLeft: 'auto' }}>{availBadge}</span>}
+              {/* Row 1: metadata + availability status */}
+              <div className="vote-card-meta">
+                <span className="vote-card-day">{weekday(slot.date, i18n.language)}</span>
+                <span className="vote-card-sep">·</span>
+                <span className="vote-card-date">{formatDate(slot.date)}</span>
+                <span className="vote-card-sep">·</span>
+                <span className="vote-card-time">{slot.local_time}</span>
+                <span className="vote-card-sep">·</span>
+                <span className="vote-card-court">{slot.court}</span>
+                <span className="vote-card-sep">·</span>
+                <span className="vote-card-dur">{slot.duration}m</span>
+                {availStatus === 'ok' && (
+                  <span className="vote-avail-text vote-avail-text--ok">✓ {t('votePage.avail_available')}</span>
+                )}
+                {availStatus === 'gone' && (
+                  <span className="vote-avail-text vote-avail-text--gone">✗ {t('votePage.avail_unavailable')}</span>
+                )}
+                {availStatus === 'booked' && (
+                  <span className="vote-avail-text vote-avail-text--booked">🎾 {t('votePage.avail_booked')}</span>
+                )}
               </div>
 
-              {/* Row 2: progress bar + voter names inline */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
-                <div style={{ position: 'relative', width: '72px', flexShrink: 0, height: '4px', borderRadius: '2px', background: 'var(--border-color)' }}>
-                  <div style={{
-                    position: 'absolute', inset: 0, borderRadius: '2px', background: 'var(--accent)',
-                    width: `${pct}%`, transition: 'width 0.4s ease',
-                  }} />
+              {/* Row 2: progress + names + actions */}
+              <div className="vote-card-row">
+                <div className="vote-card-bar">
+                  <div className="vote-card-bar-fill" style={{ width: `${pct}%` }} />
                 </div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                  {yesCount}/{thresh}
-                </span>
+                <span className="vote-card-count">{yesCount}/{thresh}</span>
                 {slotAttendees.length > 0 && (
-                  <div className="vote-attendee-chips" style={{ flex: 1 }}>
-                    {slotAttendees.map(name => (
-                      <span key={name} className="vote-attendee-chip">👤 {name}</span>
-                    ))}
-                  </div>
+                  <span className="vote-card-names">{slotAttendees.join(' · ')}</span>
                 )}
-              </div>
-
-              {/* Row 3: can-attend toggle | admin: mark-booked | book button */}
-              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', width: '100%' }}>
-                <button
-                  style={{
-                    padding: '4px 12px', fontSize: '0.8rem', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
-                    border: `1px solid ${myAnswer === true ? 'rgb(22,163,74)' : 'var(--border-color)'}`,
-                    background: myAnswer === true ? 'rgba(22,163,74,0.12)' : 'var(--bg-surface-raised)',
-                    color: 'var(--text-primary)',
-                    fontWeight: myAnswer === true ? 600 : 400,
-                    whiteSpace: 'nowrap',
-                  }}
-                  disabled={submittedVotes !== null}
-                  onClick={() => setPendingVotes(prev => ({
-                    ...prev,
-                    [slot.slot_id]: prev[slot.slot_id] === true ? undefined : true,
-                  }))}
-                >
-                  ✓ {t('votePage.can_attend')}
-                </button>
-                {adminMode && !isBooked && (
+                <div className="vote-card-actions">
+                  {adminMode && !isBooked && (
+                    <button
+                      className="vote-mark-booked-btn"
+                      disabled={bookingSlot === slot.slot_id}
+                      onClick={() => handleMarkBooked(slot.slot_id)}
+                      title={t('votePage.mark_booked')}
+                    >
+                      {bookingSlot === slot.slot_id ? '…' : '📌'}
+                    </button>
+                  )}
                   <button
-                    className="slot-mark-booked-btn"
-                    disabled={bookingSlot === slot.slot_id}
-                    onClick={() => handleMarkBooked(slot.slot_id)}
+                    className={`vote-attend-btn${myAnswer === true ? ' vote-attend-btn--yes' : ''}`}
+                    disabled={submittedVotes !== null}
+                    onClick={() => setPendingVotes(prev => ({
+                      ...prev,
+                      [slot.slot_id]: prev[slot.slot_id] === true ? undefined : true,
+                    }))}
+                    title={t('votePage.can_attend')}
                   >
-                    {bookingSlot === slot.slot_id ? '…' : `📌 ${t('votePage.mark_booked')}`}
+                    ✓
                   </button>
-                )}
-                <a
-                  href={isWinner && !isBooked ? slot.booking_link : undefined}
-                  className="find-book-btn"
-                  style={{
-                    marginLeft: 'auto',
-                    visibility: isWinner && !isBooked ? 'visible' : 'hidden',
-                    pointerEvents: isWinner && !isBooked ? 'auto' : 'none',
-                  }}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {t('votePage.book_btn')}
-                </a>
+                  {isWinner && !isBooked && (
+                    <a
+                      href={slot.booking_link}
+                      className="vote-book-link"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {t('votePage.book_btn')}
+                    </a>
+                  )}
+                </div>
               </div>
             </div>
           )
@@ -321,13 +304,13 @@ export default function VotePage({ voteId }) {
 
       {/* Unvoted hint */}
       {submittedVotes === null && voterName.trim() && unvotedCount > 0 && (
-        <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '10px 0 0' }}>
+        <p className="vote-unvoted-hint">
           {t('votePage.unvoted_hint', { count: unvotedCount })}
         </p>
       )}
 
-      {/* Submit / Change row */}
-      <div style={{ marginTop: '14px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+      {/* Submit / status */}
+      <div className="vote-submit-row">
         {submittedVotes === null ? (
           <button
             className="find-submit"
@@ -338,25 +321,14 @@ export default function VotePage({ voteId }) {
             {submitting ? t('votePage.submitting') : t('votePage.submit_btn')}
           </button>
         ) : (
-          <>
-            <span style={{ fontSize: '0.8rem', color: 'var(--accent)' }}>{t('votePage.submitted_label')}</span>
-            <button className="suggestion-chip" onClick={handleChangeVote}>
-              {t('votePage.change_vote')}
-            </button>
-          </>
+          <span className="vote-submitted-label">{t('votePage.submitted_label')}</span>
         )}
       </div>
 
-      {submitError && (
-        <p style={{ fontSize: '0.8rem', color: 'rgb(220,38,38)', marginTop: '8px' }}>{submitError}</p>
-      )}
-      {bookingError && (
-        <p style={{ fontSize: '0.8rem', color: 'rgb(220,38,38)', marginTop: '8px' }}>{bookingError}</p>
-      )}
+      {submitError && <p className="vote-error-msg">{submitError}</p>}
+      {bookingError && <p className="vote-error-msg">{bookingError}</p>}
 
-      <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '16px' }}>
-        {t('votePage.expires_note')}
-      </p>
+      <p className="vote-expires-note">{t('votePage.expires_note')}</p>
     </div>
   )
 }
