@@ -565,7 +565,7 @@ def _parse_booking_link(link: str) -> dict | None:
         resource_id = params.get("resource_id", [None])[0]
         start_raw = params.get("start", [None])[0]
         duration_str = params.get("duration", [None])[0]
-        if not all([tenant_id, resource_id, start_raw, duration_str]):
+        if tenant_id is None or resource_id is None or start_raw is None or duration_str is None:
             return None
         # Normalise: strip milliseconds and replace Z with UTC offset
         start_clean = start_raw.replace("Z", "+00:00")
