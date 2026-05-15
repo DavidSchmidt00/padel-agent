@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 from fastapi.testclient import TestClient
 
-from playtomic_agent.web.api import app
+from playtomic_agent.web.api import _parse_booking_link, app
 from playtomic_agent.web.vote_store import InvalidSlotError, SessionNotFoundError
 
 client = TestClient(app)
@@ -37,6 +37,7 @@ _MOCK_SESSION = {
     "voter_count": 0,
     "voters": [],
     "attendees": {"s1": [], "s2": []},
+    "booked_slots": [],
 }
 
 
@@ -205,3 +206,135 @@ def test_mixed_session_single_fires_double_does_not():
     assert mock_wh.call_count == 1
     _, payload = mock_wh.call_args[0]
     assert payload["booking_link"] == "https://x/2"  # s2's booking link
+
+
+# --- _parse_booking_link unit tests ---
+
+_BOOKING_URL = (
+    "https://app.playtomic.com/payments"
+    "?tenant_id=tid123"
+    "&resource_id=rid456"
+    "&start=2026-05-18T08%3A00%3A00.000Z"
+    "&duration=90"
+)
+
+
+def test_parse_booking_link_valid():
+    result = _parse_booking_link(_BOOKING_URL)
+    assert result is not None
+    assert result["tenant_id"] == "tid123"
+    assert result["resource_id"] == "rid456"
+    assert result["date"] == "2026-05-18"
+    assert result["start_time_utc"] == "08:00:00"
+    assert result["duration"] == 90
+
+
+def test_parse_booking_link_missing_param():
+    url_no_duration = (
+        "https://app.playtomic.com/payments"
+        "?tenant_id=tid123&resource_id=rid456&start=2026-05-18T08%3A00%3A00.000Z"
+    )
+    assert _parse_booking_link(url_no_duration) is None
+
+
+def test_parse_booking_link_empty_string():
+    assert _parse_booking_link("") is None
+
+
+def test_parse_booking_link_garbage():
+    assert _parse_booking_link("not-a-url") is None
+
+
+def test_parse_booking_link_no_milliseconds():
+    url = (
+        "https://app.playtomic.com/payments"
+        "?tenant_id=t&resource_id=r&start=2026-05-18T10%3A30%3A00Z&duration=60"
+    )
+    result = _parse_booking_link(url)
+    assert result is not None
+    assert result["start_time_utc"] == "10:30:00"
+    assert result["duration"] == 60
+
+
+# --- GET /api/votes/{vote_id}/availability ---
+
+_SESSION_WITH_BOOKING_LINKS = {
+    **_MOCK_SESSION,
+    "slots": [
+        {**_SAMPLE_SLOTS[0], "booking_link": _BOOKING_URL},
+        {**_SAMPLE_SLOTS[1], "booking_link": _BOOKING_URL},
+    ],
+}
+
+
+def test_get_availability_returns_dict():
+    mock_availability = {"s1": True, "s2": False}
+    with (
+        _patched(_mock_store(session=_SESSION_WITH_BOOKING_LINKS)),
+        patch(
+            "playtomic_agent.web.api._check_slots_availability_sync",
+            return_value=mock_availability,
+        ),
+    ):
+        res = client.get("/api/votes/testvote/availability")
+    assert res.status_code == 200
+    data = res.json()
+    assert data["availability"]["s1"] is True
+    assert data["availability"]["s2"] is False
+
+
+def test_get_availability_404_for_unknown_vote():
+    m = MagicMock()
+    m.get.return_value = None
+    with _patched(m):
+        res = client.get("/api/votes/nosuchvote/availability")
+    assert res.status_code == 404
+
+
+def test_get_availability_booked_slots_returned_as_none():
+    session_with_booked = {**_SESSION_WITH_BOOKING_LINKS, "booked_slots": ["s1"]}
+    mock_avail = {"s2": True}
+    with (
+        _patched(_mock_store(session=session_with_booked)),
+        patch(
+            "playtomic_agent.web.api._check_slots_availability_sync",
+            return_value=mock_avail,
+        ),
+    ):
+        res = client.get("/api/votes/testvote/availability")
+    assert res.status_code == 200
+    data = res.json()
+    assert data["availability"]["s1"] is None  # booked → None
+    assert data["availability"]["s2"] is True
+
+
+# --- POST /api/votes/{vote_id}/slots/{slot_id}/book ---
+
+
+def test_mark_slot_booked_200():
+    updated_session = {**_MOCK_SESSION, "booked_slots": ["s1"]}
+    m = _mock_store()
+    m.get.side_effect = [
+        _MOCK_SESSION,
+        updated_session,
+    ]  # first get validates, second returns fresh
+    with _patched(m):
+        res = client.post("/api/votes/testvote/slots/s1/book")
+    assert res.status_code == 200
+    data = res.json()
+    assert "s1" in data["booked_slots"]
+    m.mark_booked.assert_called_once_with("testvote", "s1")
+
+
+def test_mark_slot_booked_404_unknown_vote():
+    m = MagicMock()
+    m.get.return_value = None
+    with _patched(m):
+        res = client.post("/api/votes/nosuch/slots/s1/book")
+    assert res.status_code == 404
+
+
+def test_mark_slot_booked_422_unknown_slot():
+    with _patched(_mock_store()):
+        res = client.post("/api/votes/testvote/slots/badslot/book")
+    assert res.status_code == 422
