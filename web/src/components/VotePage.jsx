@@ -176,9 +176,10 @@ export default function VotePage({ voteId }) {
           <button
             className={`vote-admin-toggle${adminMode ? ' vote-admin-toggle--active' : ''}`}
             onClick={() => setAdminMode(m => !m)}
-            title={t('votePage.admin_mode')}
+            aria-label={t('votePage.admin_mode')}
           >
-            ⚙️
+            <span aria-hidden="true">⚙️</span>
+            <span className="vote-admin-label">{t('votePage.admin_mode')}</span>
           </button>
         </div>
       </div>
@@ -198,7 +199,7 @@ export default function VotePage({ voteId }) {
       )}
 
       {/* Who has voted */}
-      {session?.voters?.length > 0 && (
+      {session?.voters?.length > 0 ? (
         <p className="vote-voters-line">
           {session.voters.join(' · ')}
           {' '}
@@ -206,7 +207,9 @@ export default function VotePage({ voteId }) {
             ({t('votePage.voters_label', { count: session.voter_count })})
           </span>
         </p>
-      )}
+      ) : submittedVotes === null ? (
+        <p className="vote-voters-empty">{t('votePage.no_votes_yet')}</p>
+      ) : null}
 
       {/* Slot cards */}
       <div className="vote-cards">
@@ -234,24 +237,27 @@ export default function VotePage({ voteId }) {
             >
               {/* Row 1: metadata + availability status */}
               <div className="vote-card-meta">
-                <span className="vote-card-day">{weekday(slot.date, i18n.language)}</span>
-                <span className="vote-card-sep">·</span>
-                <span className="vote-card-date">{formatDate(slot.date)}</span>
-                <span className="vote-card-sep">·</span>
-                <span className="vote-card-time">{slot.local_time}</span>
-                <span className="vote-card-sep">·</span>
-                <span className="vote-card-court">{slot.court}</span>
-                <span className="vote-card-sep">·</span>
-                <span className="vote-card-dur">{slot.duration}m</span>
-                {availStatus === 'ok' && (
-                  <span className="vote-avail-text vote-avail-text--ok">✓ {t('votePage.avail_available')}</span>
-                )}
-                {availStatus === 'gone' && (
-                  <span className="vote-avail-text vote-avail-text--gone">✗ {t('votePage.avail_unavailable')}</span>
-                )}
-                {availStatus === 'booked' && (
-                  <span className="vote-avail-text vote-avail-text--booked">🎾 {t('votePage.avail_booked')}</span>
-                )}
+                <div className="vote-card-meta-top">
+                  <span className="vote-card-day">{weekday(slot.date, i18n.language)}</span>
+                  <span className="vote-card-sep">·</span>
+                  <span className="vote-card-date">{formatDate(slot.date)}</span>
+                  <span className="vote-card-sep">·</span>
+                  <span className="vote-card-time">{slot.local_time}</span>
+                  {availStatus === 'ok' && (
+                    <span className="vote-avail-text vote-avail-text--ok">✓ {t('votePage.avail_available')}</span>
+                  )}
+                  {availStatus === 'gone' && (
+                    <span className="vote-avail-text vote-avail-text--gone">✗ {t('votePage.avail_unavailable')}</span>
+                  )}
+                  {availStatus === 'booked' && (
+                    <span className="vote-avail-text vote-avail-text--booked">🎾 {t('votePage.avail_booked')}</span>
+                  )}
+                </div>
+                <div className="vote-card-meta-sub">
+                  <span className="vote-card-court">{slot.court}</span>
+                  <span className="vote-card-sep">·</span>
+                  <span className="vote-card-dur">{slot.duration}m</span>
+                </div>
               </div>
 
               {/* Row 2: progress + names + actions */}
@@ -269,9 +275,11 @@ export default function VotePage({ voteId }) {
                       className="vote-mark-booked-btn"
                       disabled={bookingSlot === slot.slot_id}
                       onClick={() => handleMarkBooked(slot.slot_id)}
-                      title={t('votePage.mark_booked')}
+                      aria-label={t('votePage.mark_booked')}
                     >
-                      {bookingSlot === slot.slot_id ? '…' : '📌'}
+                      <span className="vote-mark-booked-circle" aria-hidden="true">
+                        {bookingSlot === slot.slot_id ? '…' : '📌'}
+                      </span>
                     </button>
                   )}
                   <button
@@ -281,22 +289,25 @@ export default function VotePage({ voteId }) {
                       ...prev,
                       [slot.slot_id]: prev[slot.slot_id] === true ? undefined : true,
                     }))}
-                    title={t('votePage.can_attend')}
+                    aria-label={t('votePage.can_attend')}
+                    aria-pressed={myAnswer === true}
                   >
-                    ✓
+                    <span className="vote-attend-circle" aria-hidden="true">✓</span>
                   </button>
-                  {isWinner && !isBooked && (
-                    <a
-                      href={slot.booking_link}
-                      className="vote-book-link"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {t('votePage.book_btn')}
-                    </a>
-                  )}
                 </div>
               </div>
+
+              {/* Row 3: book CTA — full width, winner only */}
+              {isWinner && !isBooked && (
+                <a
+                  href={slot.booking_link}
+                  className="vote-book-link vote-book-link--cta"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  🎾 {t('votePage.book_btn')}
+                </a>
+              )}
             </div>
           )
         })}

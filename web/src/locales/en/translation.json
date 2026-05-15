@@ -151,6 +151,7 @@
         "attendees": "Attendees",
         "voters_label_one": "{{count}} voted",
         "voters_label_other": "{{count}} voted",
+        "no_votes_yet": "No votes yet — be the first!",
         "unvoted_hint_one": "{{count}} slot not yet voted — will count as can't attend",
         "unvoted_hint_other": "{{count}} slots not yet voted — will count as can't attend",
         "submit_btn": "Submit availability",

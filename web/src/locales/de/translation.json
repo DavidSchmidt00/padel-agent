@@ -151,6 +151,7 @@
         "attendees": "Teilnehmer",
         "voters_label_one": "{{count}} abgestimmt",
         "voters_label_other": "{{count}} abgestimmt",
+        "no_votes_yet": "Noch keine Stimmen — sei der Erste!",
         "unvoted_hint_one": "{{count}} Slot noch nicht markiert — wird als 'Kann nicht' gezählt",
         "unvoted_hint_other": "{{count}} Slots noch nicht markiert — werden als 'Kann nicht' gezählt",
         "submit_btn": "Verfügbarkeit speichern",

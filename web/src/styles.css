@@ -1946,6 +1946,13 @@ body {
   color: var(--text-tertiary);
 }
 
+.vote-voters-empty {
+  margin: 0 0 12px;
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+
 /* Slot card list */
 .vote-cards {
   display: flex;
@@ -1967,23 +1974,38 @@ body {
 }
 
 .vote-card--winner {
-  border-color: rgba(6, 182, 212, 0.5);
   background: var(--accent-subtle);
+  box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.35);
 }
 
 .vote-card[data-avail="ok"] { border-left-color: rgb(22, 163, 74); }
 .vote-card[data-avail="gone"] { border-left-color: rgb(220, 38, 38); }
-.vote-card[data-avail="booked"] { border-left-color: var(--accent); }
+.vote-card[data-avail="booked"] { border-left-color: rgb(124, 58, 237); }
 
-/* Row 1: metadata */
+/* Row 1: metadata — two sub-rows to prevent separator orphaning */
 .vote-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.vote-card-meta-top {
   display: flex;
   align-items: center;
   gap: 5px;
-  flex-wrap: wrap;
   font-size: 0.85rem;
   color: var(--text-primary);
-  min-width: 0;
+  overflow: hidden;
+}
+
+.vote-card-meta-sub {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  overflow: hidden;
 }
 
 .vote-card-day {
@@ -2027,11 +2049,12 @@ body {
   white-space: nowrap;
   flex-shrink: 0;
   margin-left: auto;
+  padding-left: 4px;
 }
 
 .vote-avail-text--ok { color: rgb(22, 163, 74); }
 .vote-avail-text--gone { color: rgb(220, 38, 38); }
-.vote-avail-text--booked { color: var(--accent); }
+.vote-avail-text--booked { color: rgb(124, 58, 237); }
 
 /* Row 2: progress + names + actions */
 .vote-card-row {
@@ -2042,10 +2065,10 @@ body {
 }
 
 .vote-card-bar {
-  width: 48px;
+  width: 64px;
   flex-shrink: 0;
-  height: 3px;
-  border-radius: 2px;
+  height: 5px;
+  border-radius: 3px;
   background: var(--border-color);
   position: relative;
 }
@@ -2053,7 +2076,7 @@ body {
 .vote-card-bar-fill {
   position: absolute;
   inset: 0;
-  border-radius: 2px;
+  border-radius: 3px;
   background: var(--accent);
   transition: width 0.4s ease;
 }
@@ -2082,32 +2105,47 @@ body {
   flex-shrink: 0;
 }
 
-/* Round attend toggle */
+/* Round attend toggle — 44px tap target, 28px visual circle */
 .vote-attend-btn {
-  width: 28px;
-  height: 28px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  border: 2px solid var(--border-color);
-  background: var(--bg-input);
-  color: transparent;
-  font-size: 0.75rem;
-  font-weight: 700;
+  border: none;
+  background: transparent;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  padding: 0;
+  margin: -8px;
+}
+
+.vote-attend-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--border-color);
+  background: var(--bg-input);
+  color: var(--text-tertiary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
   transition: border-color 0.15s, background 0.15s, color 0.15s;
 }
 
-.vote-attend-btn--yes {
+.vote-attend-btn--yes .vote-attend-circle {
   border-color: rgb(22, 163, 74);
   background: rgb(22, 163, 74);
   color: #fff;
 }
 
-.vote-attend-btn:not(:disabled):hover {
+.vote-attend-btn:not(:disabled):hover .vote-attend-circle {
   border-color: rgb(22, 163, 74);
+  color: rgb(22, 163, 74);
 }
 
 .vote-attend-btn:disabled {
@@ -2115,8 +2153,23 @@ body {
   opacity: 0.7;
 }
 
-/* Icon-only admin mark-booked */
+/* Icon-only admin mark-booked — 44px tap target, 28px visual circle */
 .vote-mark-booked-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  margin: -8px;
+}
+
+.vote-mark-booked-circle {
   width: 28px;
   height: 28px;
   border-radius: 50%;
@@ -2124,16 +2177,15 @@ body {
   background: none;
   font-size: 0.82rem;
   line-height: 1;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--text-secondary);
-  flex-shrink: 0;
+  pointer-events: none;
   transition: background 0.12s, border-color 0.12s, color 0.12s;
 }
 
-.vote-mark-booked-btn:hover:not(:disabled) {
+.vote-mark-booked-btn:hover:not(:disabled) .vote-mark-booked-circle {
   background: rgba(6, 182, 212, 0.1);
   border-color: rgba(6, 182, 212, 0.4);
   color: var(--accent);
@@ -2164,17 +2216,37 @@ body {
   opacity: 0.85;
 }
 
+.vote-book-link--cta {
+  width: 100%;
+  justify-content: center;
+  padding: 9px 12px;
+  font-size: 0.88rem;
+  letter-spacing: 0.01em;
+}
+
 /* Admin mode toggle */
 .vote-admin-toggle {
   background: none;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  padding: 0.25rem 0.4rem;
-  font-size: 0.95rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.78rem;
   line-height: 1;
   cursor: pointer;
   color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: inherit;
   transition: color 0.12s, background 0.12s, border-color 0.12s;
+}
+
+.vote-admin-label {
+  font-size: 0.72rem;
+}
+
+@media (max-width: 360px) {
+  .vote-admin-label { display: none; }
 }
 
 .vote-admin-toggle:hover {
@@ -2226,8 +2298,9 @@ body {
 }
 
 .vote-submitted-label {
-  font-size: 0.8rem;
-  color: var(--accent);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgb(22, 163, 74);
 }
 
 /* Error messages */
