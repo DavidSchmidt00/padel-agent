@@ -1,0 +1,83 @@
+name: Project Board Automation
+
+on:
+  issues:
+    types: [opened, reopened, closed, assigned]
+  pull_request:
+    types: [opened, reopened, closed]
+
+jobs:
+  manage-project-item:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add issue to project
+        if: github.event_name == 'issues' && github.event.action != 'closed'
+        run: |
+          gh project item-add 4 \
+            --owner DavidSchmidt00 \
+            --url "${{ github.event.issue.html_url }}"
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+
+      - name: Add PR to project
+        if: github.event_name == 'pull_request' && github.event.action == 'opened'
+        run: |
+          gh project item-add 4 \
+            --owner DavidSchmidt00 \
+            --url "${{ github.event.pull_request.html_url }}"
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+
+      - name: Set status to In Progress (assigned issue)
+        if: github.event_name == 'issues' && github.event.action == 'assigned'
+        run: |
+          PROJECT_ID=$(gh project view 4 --owner DavidSchmidt00 --format json | jq -r '.id')
+          ITEM_ID=$(gh project item-list 4 --owner DavidSchmidt00 --format json \
+            | jq -r --arg url "${{ github.event.issue.html_url }}" \
+              '.items[] | select(.content.url == $url) | .id')
+          if [ -n "$ITEM_ID" ]; then
+            gh project item-edit \
+              --project-id "$PROJECT_ID" \
+              --id "$ITEM_ID" \
+              --field-value "In Progress" \
+              --field-name "Status"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+
+      - name: Set status to Done (closed issue)
+        if: github.event_name == 'issues' && github.event.action == 'closed'
+        run: |
+          PROJECT_ID=$(gh project view 4 --owner DavidSchmidt00 --format json | jq -r '.id')
+          ITEM_ID=$(gh project item-list 4 --owner DavidSchmidt00 --format json \
+            | jq -r --arg url "${{ github.event.issue.html_url }}" \
+              '.items[] | select(.content.url == $url) | .id')
+          if [ -n "$ITEM_ID" ]; then
+            gh project item-edit \
+              --project-id "$PROJECT_ID" \
+              --id "$ITEM_ID" \
+              --field-value "Done" \
+              --field-name "Status"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+
+      - name: Set status to Done (merged PR)
+        if: >
+          github.event_name == 'pull_request' &&
+          github.event.action == 'closed' &&
+          github.event.pull_request.merged == true
+        run: |
+          PROJECT_ID=$(gh project view 4 --owner DavidSchmidt00 --format json | jq -r '.id')
+          ITEM_ID=$(gh project item-list 4 --owner DavidSchmidt00 --format json \
+            | jq -r --arg url "${{ github.event.pull_request.html_url }}" \
+              '.items[] | select(.content.url == $url) | .id')
+          if [ -n "$ITEM_ID" ]; then
+            gh project item-edit \
+              --project-id "$PROJECT_ID" \
+              --id "$ITEM_ID" \
+              --field-value "Done" \
+              --field-name "Status"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
