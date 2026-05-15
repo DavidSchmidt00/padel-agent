@@ -280,7 +280,7 @@ export default function VotePage({ voteId }) {
                 >
                   ✓ {t('votePage.can_attend')}
                 </button>
-                {isWinner && !bookedSlots.has(slot.slot_id) && (
+                {!bookedSlots.has(slot.slot_id) && (
                   <button
                     className="slot-mark-booked-btn"
                     disabled={bookingSlot === slot.slot_id}
@@ -294,7 +294,7 @@ export default function VotePage({ voteId }) {
                   href={isWinner && !bookedSlots.has(slot.slot_id) ? slot.booking_link : undefined}
                   className="find-book-btn"
                   style={{
-                    marginLeft: isWinner && !bookedSlots.has(slot.slot_id) ? '0' : 'auto',
+                    marginLeft: '0',
                     visibility: isWinner && !bookedSlots.has(slot.slot_id) ? 'visible' : 'hidden',
                     pointerEvents: isWinner && !bookedSlots.has(slot.slot_id) ? 'auto' : 'none',
                   }}
