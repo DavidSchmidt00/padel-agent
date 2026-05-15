@@ -1871,7 +1871,9 @@ body {
   color: var(--error-color);
 }
 
-/* Vote URL banner — prominent link card at the top of results */
+/* ── VotePage redesign ── */
+
+/* Vote URL banner — shown at top of FindMode results when a vote link exists */
 .vote-url-banner {
   display: flex;
   align-items: flex-start;
@@ -1914,86 +1916,358 @@ body {
   color: var(--text-primary);
 }
 
-/* Availability badge on each VotePage slot card */
-.slot-avail-badge {
-  display: inline-block;
-  font-size: 0.72rem;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 99px;
-  white-space: nowrap;
+/* Page header */
+.vote-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
 }
 
-.slot-avail-badge--ok {
-  background: rgba(22, 163, 74, 0.12);
-  border: 1px solid rgba(22, 163, 74, 0.35);
+.vote-page-title {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.vote-page-header-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+/* Who-has-voted line */
+.vote-voters-line {
+  margin: 0 0 12px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.vote-voters-count {
+  color: var(--text-tertiary);
+}
+
+.vote-voters-empty {
+  margin: 0 0 12px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+/* Slot card list */
+.vote-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Individual slot card */
+.vote-card {
+  padding: 10px 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-left: 3px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  transition: border-left-color 0.2s;
+}
+
+.vote-card--winner {
+  background: var(--accent-subtle);
+  box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.35);
+}
+
+.vote-card[data-avail="ok"] { border-left-color: rgb(22, 163, 74); }
+.vote-card[data-avail="gone"] { border-left-color: rgb(220, 38, 38); }
+.vote-card[data-avail="booked"] { border-left-color: rgb(124, 58, 237); }
+
+/* Row 1: metadata — two sub-rows to prevent separator orphaning */
+.vote-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.vote-card-meta-top {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.vote-card-meta-sub {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  overflow: hidden;
+}
+
+.vote-card-day {
+  font-weight: 600;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.vote-card-date,
+.vote-card-time {
+  flex-shrink: 0;
+}
+
+.vote-card-time {
+  font-weight: 500;
+}
+
+.vote-card-sep {
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+.vote-card-court {
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.vote-card-dur {
+  color: var(--text-tertiary);
+  font-size: 0.78rem;
+  flex-shrink: 0;
+}
+
+.vote-card-price {
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  flex-shrink: 0;
+}
+
+/* Inline availability text (no pill) */
+.vote-avail-text {
+  font-size: 0.78rem;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-left: auto;
+  padding-left: 4px;
+}
+
+.vote-avail-text--ok { color: rgb(22, 163, 74); }
+.vote-avail-text--gone { color: rgb(220, 38, 38); font-weight: 700; }
+.vote-avail-text--booked { color: rgb(124, 58, 237); }
+.vote-avail-text--checking {
+  color: var(--text-tertiary);
+  animation: vote-avail-pulse 1.4s ease-in-out infinite;
+  letter-spacing: 0.05em;
+}
+
+@keyframes vote-avail-pulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 1; }
+}
+
+/* Row 2: progress + names + actions */
+.vote-card-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.vote-card-bar {
+  width: 64px;
+  flex-shrink: 0;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--border-color);
+  position: relative;
+}
+
+.vote-card-bar-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: 3px;
+  background: var(--accent);
+  transition: width 0.4s ease;
+}
+
+.vote-card-count {
+  font-size: 0.73rem;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.vote-card-names {
+  font-size: 0.73rem;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.vote-card-actions {
+  display: flex;
+  gap: 0;
+  align-items: center;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* Round attend toggle — 44px tap target, 28px visual circle */
+.vote-attend-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.vote-attend-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--border-color);
+  background: var(--bg-input);
+  color: var(--text-tertiary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.vote-attend-btn--yes .vote-attend-circle {
+  border-color: rgb(22, 163, 74);
+  background: rgb(22, 163, 74);
+  color: #fff;
+}
+
+.vote-attend-btn:not(:disabled):hover .vote-attend-circle {
+  border-color: rgb(22, 163, 74);
   color: rgb(22, 163, 74);
 }
 
-.slot-avail-badge--gone {
-  background: rgba(220, 38, 38, 0.1);
-  border: 1px solid rgba(220, 38, 38, 0.3);
-  color: rgb(220, 38, 38);
+.vote-attend-btn:disabled {
+  cursor: default;
 }
 
-.slot-avail-badge--booked {
-  background: rgba(6, 182, 212, 0.12);
-  border: 1px solid rgba(6, 182, 212, 0.4);
-  color: var(--accent);
+.vote-attend-btn:disabled:not(.vote-attend-btn--yes) .vote-attend-circle {
+  opacity: 0.45;
 }
 
-.slot-mark-booked-btn {
-  background: none;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  padding: 0.3rem 0.75rem;
-  font-family: inherit;
-  font-size: 0.78rem;
-  color: var(--text-secondary);
+/* Icon-only admin mark-booked — 44px tap target, 28px visual circle */
+.vote-mark-booked-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
   cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
 }
 
-.slot-mark-booked-btn:hover:not(:disabled) {
+.vote-mark-booked-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  background: none;
+  font-size: 0.82rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  pointer-events: none;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.vote-mark-booked-btn:hover:not(:disabled) .vote-mark-booked-circle {
   background: rgba(6, 182, 212, 0.1);
-  color: var(--accent);
   border-color: rgba(6, 182, 212, 0.4);
+  color: var(--accent);
 }
 
-.slot-mark-booked-btn:disabled {
+.vote-mark-booked-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-/* Attendee chips — always-visible voter list on each slot card */
-.vote-attendee-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-
-.vote-attendee-chip {
-  font-size: 0.72rem;
-  padding: 2px 8px;
-  border-radius: 99px;
-  background: rgba(6, 182, 212, 0.13);
-  border: 1px solid rgba(6, 182, 212, 0.3);
-  color: var(--accent);
+/* Book link button */
+.vote-book-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: #fff;
+  text-decoration: none;
   white-space: nowrap;
+  flex-shrink: 0;
+  transition: opacity 0.12s;
 }
 
-/* Admin mode toggle in VotePage header */
+.vote-book-link:hover {
+  opacity: 0.85;
+}
+
+.vote-book-link--cta {
+  width: 100%;
+  justify-content: center;
+  padding: 9px 12px;
+  font-size: 0.88rem;
+  letter-spacing: 0.01em;
+  animation: vote-cta-appear 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes vote-cta-appear {
+  from { opacity: 0; transform: translateY(4px) scale(0.97); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Admin mode toggle */
 .vote-admin-toggle {
   background: none;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  padding: 0.25rem 0.4rem;
-  font-size: 0.95rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.78rem;
   line-height: 1;
   cursor: pointer;
   color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: inherit;
   transition: color 0.12s, background 0.12s, border-color 0.12s;
+}
+
+.vote-admin-label {
+  font-size: 0.72rem;
+}
+
+@media (max-width: 360px) {
+  .vote-admin-label { display: none; }
 }
 
 .vote-admin-toggle:hover {
@@ -2008,25 +2282,60 @@ body {
   border-color: rgba(6, 182, 212, 0.4);
 }
 
-/* Change-vote button shown at top of VotePage header */
+/* Change-vote button in header */
 .vote-change-top-btn {
   background: var(--bg-surface-raised);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
-  padding: 0.35rem 0.85rem;
+  padding: 0.3rem 0.75rem;
   font-family: inherit;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--text-secondary);
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.12s, color 0.12s, border-color 0.12s;
   flex-shrink: 0;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
 }
 
 .vote-change-top-btn:hover {
   background: var(--accent-subtle);
   color: var(--accent);
   border-color: rgba(6, 182, 212, 0.4);
+}
+
+/* Unvoted hint */
+.vote-unvoted-hint {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin: 10px 0 0;
+}
+
+/* Submit row */
+.vote-submit-row {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.vote-submitted-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgb(22, 163, 74);
+}
+
+/* Error messages */
+.vote-error-msg {
+  font-size: 0.8rem;
+  color: rgb(220, 38, 38);
+  margin-top: 8px;
+}
+
+/* Expires note */
+.vote-expires-note {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 16px;
 }
 
 /* Share state */
