@@ -695,6 +695,21 @@ async def mark_slot_booked(vote_id: str, slot_id: str):
     return {"booked_slots": (updated or {}).get("booked_slots", [])}
 
 
+@app.delete("/api/votes/{vote_id}/slots/{slot_id}/book", status_code=200)
+async def unmark_slot_booked(vote_id: str, slot_id: str):
+    """Remove the booked flag from a slot (organiser undo)."""
+    store = _get_vote_store()
+    session = store.get(vote_id)
+    if session is None:
+        raise HTTPException(status_code=404, detail="Vote session not found or expired.")
+    valid_ids = {s["slot_id"] for s in session["slots"]}
+    if slot_id not in valid_ids:
+        raise HTTPException(status_code=422, detail="Unknown slot_id.")
+    store.unmark_booked(vote_id, slot_id)
+    updated = store.get(vote_id)
+    return {"booked_slots": (updated or {}).get("booked_slots", [])}
+
+
 def _sign_webhook_payload(payload: dict, secret: str) -> str:
     """Return HMAC-SHA256 hex digest of the JSON-serialised payload."""
     body = json.dumps(payload, sort_keys=True, separators=(",", ":"))

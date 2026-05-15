@@ -165,6 +165,7 @@
         "avail_unavailable": "No longer available",
         "avail_booked": "Already booked for us",
         "mark_booked": "Mark as booked",
+        "unmark_booked": "Undo booking",
         "booking_error": "Could not mark as booked. Please try again.",
         "consensus_title": "Consensus reached! 🎉",
         "consensus_body": "Book now before the slot disappears:",

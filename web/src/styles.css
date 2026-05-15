@@ -2147,7 +2147,7 @@ body {
   align-items: center;
   justify-content: center;
   pointer-events: none;
-  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  transition: border-color 0.15s, background 0.15s;
 }
 
 .vote-attend-btn--yes .vote-attend-circle {
@@ -2207,6 +2207,31 @@ body {
 }
 
 .vote-mark-booked-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Undo booked button — text pill, admin only */
+.vote-unmark-booked-btn {
+  background: none;
+  border: 1px solid rgba(124, 58, 237, 0.4);
+  border-radius: var(--radius-sm);
+  padding: 3px 8px;
+  font-family: inherit;
+  font-size: 0.72rem;
+  color: rgb(124, 58, 237);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.vote-unmark-booked-btn:hover:not(:disabled) {
+  background: rgba(124, 58, 237, 0.08);
+  border-color: rgb(124, 58, 237);
+}
+
+.vote-unmark-booked-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

@@ -242,3 +242,23 @@ class VoteStore:
                 )
         finally:
             conn.close()
+
+    def unmark_booked(self, vote_id: str, slot_id: str) -> None:
+        """Remove a slot from the booked list."""
+        conn = self._connect()
+        try:
+            with conn:
+                row = conn.execute(
+                    "SELECT IFNULL(booked_slots, '[]') FROM vote_sessions WHERE vote_id=?",
+                    (vote_id,),
+                ).fetchone()
+                if row is None:
+                    return
+                booked = set(json.loads(row[0]))
+                booked.discard(slot_id)
+                conn.execute(
+                    "UPDATE vote_sessions SET booked_slots=? WHERE vote_id=?",
+                    (json.dumps(list(booked)), vote_id),
+                )
+        finally:
+            conn.close()
