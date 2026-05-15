@@ -241,7 +241,9 @@ export default function VotePage({ voteId }) {
                 ? <span className="slot-avail-badge slot-avail-badge--booked">🎾 {t('votePage.avail_booked')}</span>
                 : availability[slot.slot_id] === true
                   ? <span className="slot-avail-badge slot-avail-badge--ok">✓ {t('votePage.avail_available')}</span>
-                  : null
+                  : availability[slot.slot_id] === false
+                    ? <span className="slot-avail-badge slot-avail-badge--gone">✗ {t('votePage.avail_unavailable')}</span>
+                    : null
               }
 
               {/* Progress bar */}
