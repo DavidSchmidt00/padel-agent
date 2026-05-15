@@ -2162,9 +2162,12 @@ body {
   color: #fff;
 }
 
-.vote-attend-btn:not(:disabled):hover .vote-attend-circle {
-  border-color: rgb(22, 163, 74);
-  color: rgb(22, 163, 74);
+/* Hover only for real pointer devices — prevents sticky-hover bug on touch screens
+   and fixes the specificity clash where hover color overrode the --yes white checkmark */
+@media (hover: hover) and (pointer: fine) {
+  .vote-attend-btn:not(:disabled):hover .vote-attend-circle {
+    border-color: rgb(22, 163, 74);
+  }
 }
 
 .vote-attend-btn:disabled {
