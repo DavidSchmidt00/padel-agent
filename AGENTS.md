@@ -185,15 +185,14 @@ When the agent is the sole author of a commit:
 
 Pre-commit hooks run automatically on commit (ruff + mypy).
 
-### CI/CD Secrets & Variables (one-time setup)
-| GitHub Secret / Variable | Value |
-|---|---|
-| `RAILWAY_TOKEN` (secret) | Railway API token (Settings → Tokens) |
-| `RAILWAY_PROJECT_ID` (variable) | `d5ae860a-16e6-4342-9fcf-f3f725efadee` |
+### One-Time GitHub Setup
+Branch Protection unter `Settings → Branches`:
+- **`main`** — "Require a pull request before merging" + "Require status checks to pass" (CI-Job)
+- **`staging`** — optional: PR-Pflicht empfohlen
 
-GitHub Environments to configure at `Settings → Environments`:
-- **`staging`** — no approval required (auto-deploy on push to `staging` branch)
-- **`production`** — add yourself as Required Reviewer (blocks deploy until you approve in GitHub Actions UI)
+Railway deploys per nativer GitHub-Integration (kein Token nötig):
+- `staging`-Branch → Railway `staging`-Environment (auto-deploy)
+- `main`-Branch → Railway `production`-Environment (auto-deploy nach Merge)
 
 ## Documentation
 
