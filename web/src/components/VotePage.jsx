@@ -31,6 +31,7 @@ export default function VotePage({ voteId }) {
   const [bookedSlots, setBookedSlots] = useState(new Set())
   const [bookingSlot, setBookingSlot] = useState(null)
   const [adminMode, setAdminMode] = useState(false)
+  const [bookingError, setBookingError] = useState(null)
   const timerRef = useRef(null)
   const availTimerRef = useRef(null)
 
@@ -129,11 +130,15 @@ export default function VotePage({ voteId }) {
 
   async function handleMarkBooked(slotId) {
     setBookingSlot(slotId)
+    setBookingError(null)
     try {
       const res = await fetch(`/api/votes/${voteId}/slots/${slotId}/book`, { method: 'POST' })
-      if (!res.ok) return
-      setBookedSlots(prev => new Set([...prev, slotId]))
+      if (!res.ok) { setBookingError(t('votePage.booking_error')); return }
+      const data = await res.json()
+      setBookedSlots(new Set(data.booked_slots ?? []))
       setAvailability(prev => ({ ...prev, [slotId]: null }))
+    } catch {
+      setBookingError(t('votePage.booking_error'))
     } finally {
       setBookingSlot(null)
     }
@@ -344,6 +349,9 @@ export default function VotePage({ voteId }) {
 
       {submitError && (
         <p style={{ fontSize: '0.8rem', color: 'rgb(220,38,38)', marginTop: '8px' }}>{submitError}</p>
+      )}
+      {bookingError && (
+        <p style={{ fontSize: '0.8rem', color: 'rgb(220,38,38)', marginTop: '8px' }}>{bookingError}</p>
       )}
 
       <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '16px' }}>

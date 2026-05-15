@@ -650,7 +650,8 @@ async def get_vote_session(vote_id: str):
 
 
 @app.get("/api/votes/{vote_id}/availability")
-async def get_vote_availability(vote_id: str):
+@limiter.limit("20/minute")
+async def get_vote_availability(vote_id: str, request: Request):
     """Check whether each slot in a vote session is still bookable on Playtomic.
 
     Booked slots (marked by the group) are excluded from the live check and
@@ -690,7 +691,8 @@ async def mark_slot_booked(vote_id: str, slot_id: str):
     if slot_id not in valid_ids:
         raise HTTPException(status_code=422, detail="Unknown slot_id.")
     store.mark_booked(vote_id, slot_id)
-    return {"booked_slots": list(set(session.get("booked_slots") or []) | {slot_id})}
+    updated = store.get(vote_id)
+    return {"booked_slots": (updated or {}).get("booked_slots", [])}
 
 
 def _sign_webhook_payload(payload: dict, secret: str) -> str:
