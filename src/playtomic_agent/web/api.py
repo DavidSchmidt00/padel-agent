@@ -6,9 +6,12 @@ import logging
 import os
 from collections import defaultdict
 from datetime import date as _date
+from datetime import datetime as _datetime
 from datetime import timedelta
 from pathlib import Path
 from typing import Literal
+from urllib.parse import parse_qs
+from urllib.parse import urlparse as _urlparse
 from zoneinfo import ZoneInfo
 
 import httpx
@@ -146,8 +149,7 @@ class SearchRequest(BaseModel):
             raise ValueError("date_to must be >= date_from")
         if span > settings.search_max_date_span_days:
             raise ValueError(
-                f"Date range too large: max {settings.search_max_date_span_days} days,"
-                f" got {span}."
+                f"Date range too large: max {settings.search_max_date_span_days} days, got {span}."
             )
         return self
 
@@ -239,8 +241,10 @@ def _map_exception_to_error(exc: Exception) -> dict:
         }
 
     # 2. Rate Limits — check by type first, fall back to status-code string for SDK wrappers
-    if isinstance(exc, RateLimitExceeded) or "ResourceExhausted" in msg or (
-        isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code == 429
+    if (
+        isinstance(exc, RateLimitExceeded)
+        or "ResourceExhausted" in msg
+        or (isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code == 429)
     ):
         return {
             "code": "RATE_LIMIT_ERROR",
@@ -548,6 +552,94 @@ async def create_vote_session(req: CreateVoteRequest, request: Request):
     return {"vote_id": vote_id, "url": f"/vote/{vote_id}"}
 
 
+def _parse_booking_link(link: str) -> dict | None:
+    """Extract tenant_id, resource_id, UTC date/time and duration from a Playtomic booking link.
+
+    The booking URL looks like:
+        https://app.playtomic.com/payments?…&tenant_id=X&resource_id=Y&start=2026-05-18T08%3A00%3A00.000Z&duration=90
+    parse_qs already URL-decodes values, so start arrives as "2026-05-18T08:00:00.000Z".
+    """
+    try:
+        params = parse_qs(_urlparse(link).query)
+        tenant_id = params.get("tenant_id", [None])[0]
+        resource_id = params.get("resource_id", [None])[0]
+        start_raw = params.get("start", [None])[0]
+        duration_str = params.get("duration", [None])[0]
+        if tenant_id is None or resource_id is None or start_raw is None or duration_str is None:
+            return None
+        # Normalise: strip milliseconds and replace Z with UTC offset
+        start_clean = start_raw.replace("Z", "+00:00")
+        if "." in start_clean:
+            dot = start_clean.index(".")
+            plus = start_clean.index("+", dot) if "+" in start_clean[dot:] else len(start_clean)
+            start_clean = start_clean[:dot] + start_clean[plus:]
+        start_dt = _datetime.fromisoformat(start_clean)
+        return {
+            "tenant_id": tenant_id,
+            "resource_id": resource_id,
+            "date": start_dt.strftime("%Y-%m-%d"),
+            "start_time_utc": start_dt.strftime("%H:%M:%S"),
+            "duration": int(duration_str),
+        }
+    except Exception:
+        return None
+
+
+def _check_slots_availability_sync(slots: list[dict], api_base_url: str) -> dict[str, bool | None]:
+    """Synchronous Playtomic availability check — call via asyncio.to_thread."""
+    result: dict[str, bool | None] = {}
+    parsed_slots: list[tuple[str, dict]] = []
+
+    for slot in slots:
+        p = _parse_booking_link(slot.get("booking_link", ""))
+        if p is None:
+            result[slot["slot_id"]] = None
+        else:
+            parsed_slots.append((slot["slot_id"], p))
+
+    # Group by (tenant_id, date) to minimise API calls
+    groups: dict[tuple[str, str], list[tuple[str, dict]]] = defaultdict(list)
+    for slot_id, p in parsed_slots:
+        groups[(p["tenant_id"], p["date"])].append((slot_id, p))
+
+    with PlaytomicClient(api_base_url=api_base_url) as client:
+        for (tenant_id, date_str), group in groups.items():
+            times = [p["start_time_utc"] for _, p in group]
+            try:
+                resp = client._request(
+                    "availability",
+                    params={
+                        "tenant_id": tenant_id,
+                        "date": date_str,
+                        "sport_id": "PADEL",
+                        "start_min": f"{date_str}T{min(times)}",
+                        "start_max": f"{date_str}T{max(times)}",
+                    },
+                    timeout=10,
+                )
+                data = resp.json()
+            except Exception:
+                for slot_id, _ in group:
+                    result[slot_id] = None
+                continue
+
+            # Build lookup: (resource_id, start_time_utc, duration) → available
+            available: set[tuple[str, str, int]] = set()
+            for res_avail in data:
+                res_id = res_avail.get("resource_id", "")
+                for s in res_avail.get("slots", []):
+                    available.add((res_id, s.get("start_time", ""), int(s.get("duration", 0))))
+
+            for slot_id, p in group:
+                result[slot_id] = (
+                    p["resource_id"],
+                    p["start_time_utc"],
+                    p["duration"],
+                ) in available
+
+    return result
+
+
 @app.get("/api/votes/{vote_id}")
 async def get_vote_session(vote_id: str):
     """Return current state of a vote session (slots + tally)."""
@@ -555,6 +647,50 @@ async def get_vote_session(vote_id: str):
     if session is None:
         raise HTTPException(status_code=404, detail="Vote session not found or expired.")
     return session
+
+
+@app.get("/api/votes/{vote_id}/availability")
+async def get_vote_availability(vote_id: str):
+    """Check whether each slot in a vote session is still bookable on Playtomic.
+
+    Booked slots (marked by the group) are excluded from the live check and
+    returned with availability=None so the frontend shows the booked badge instead.
+    """
+    session = _get_vote_store().get(vote_id)
+    if session is None:
+        raise HTTPException(status_code=404, detail="Vote session not found or expired.")
+
+    booked: set[str] = set(session.get("booked_slots") or [])
+    slots_to_check = [s for s in session["slots"] if s["slot_id"] not in booked]
+
+    settings = get_settings()
+    try:
+        availability = await asyncio.to_thread(
+            _check_slots_availability_sync,
+            slots_to_check,
+            settings.playtomic_api_base_url,
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    # Booked slots are returned as None — frontend treats them separately
+    for slot_id in booked:
+        availability[slot_id] = None
+    return {"availability": availability}
+
+
+@app.post("/api/votes/{vote_id}/slots/{slot_id}/book", status_code=200)
+async def mark_slot_booked(vote_id: str, slot_id: str):
+    """Mark a slot as booked by the group. Visible to everyone with the link."""
+    store = _get_vote_store()
+    session = store.get(vote_id)
+    if session is None:
+        raise HTTPException(status_code=404, detail="Vote session not found or expired.")
+    valid_ids = {s["slot_id"] for s in session["slots"]}
+    if slot_id not in valid_ids:
+        raise HTTPException(status_code=422, detail="Unknown slot_id.")
+    store.mark_booked(vote_id, slot_id)
+    return {"booked_slots": list(set(session.get("booked_slots") or []) | {slot_id})}
 
 
 def _sign_webhook_payload(payload: dict, secret: str) -> str:

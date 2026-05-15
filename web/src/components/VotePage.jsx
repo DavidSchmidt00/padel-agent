@@ -1,19 +1,16 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 
-// Format ISO date (yyyy-mm-dd) as dd.mm (no year)
 function formatDate(iso) {
   const [, m, d] = iso.split('-')
   return `${d}.${m}`
 }
 
-// Get short weekday name from ISO date (yyyy-mm-dd) in the given locale
 function weekday(iso, locale) {
   const [y, m, d] = iso.split('-').map(Number)
   return new Date(y, m - 1, d).toLocaleDateString(locale, { weekday: 'short' })
 }
 
-// Court-type-aware consensus threshold
 function threshold(courtType) {
   return courtType === 'SINGLE' ? 2 : 4
 }
@@ -26,13 +23,17 @@ export default function VotePage({ voteId }) {
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [voterName, setVoterName] = useState('')
-  const [pendingVotes, setPendingVotes] = useState({})   // {slot_id: true|undefined} before submit
-  const [submittedVotes, setSubmittedVotes] = useState(null) // {slot_id: bool|undefined} after submit
+  const [pendingVotes, setPendingVotes] = useState({})
+  const [submittedVotes, setSubmittedVotes] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(null)
+  const [availability, setAvailability] = useState({})
+  const [bookedSlots, setBookedSlots] = useState(new Set())
+  const [bookingSlot, setBookingSlot] = useState(null)
+  const [adminMode, setAdminMode] = useState(false)
   const timerRef = useRef(null)
+  const availTimerRef = useRef(null)
 
-  // Restore previous vote from localStorage on mount
   useEffect(() => {
     try {
       const saved = localStorage.getItem(LS_KEY(voteId))
@@ -56,7 +57,9 @@ export default function VotePage({ voteId }) {
         return
       }
       if (!res.ok) return
-      setSession(await res.json())
+      const data = await res.json()
+      setSession(data)
+      if (data.booked_slots?.length) setBookedSlots(new Set(data.booked_slots))
     } finally {
       setLoading(false)
     }
@@ -67,6 +70,28 @@ export default function VotePage({ voteId }) {
     timerRef.current = setInterval(fetchSession, 3000)
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [fetchSession])
+
+  const fetchAvailability = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/votes/${voteId}/availability`)
+      if (!res.ok) return
+      const data = await res.json()
+      setAvailability(data.availability ?? {})
+    } catch {
+      // best-effort — silently ignore
+    }
+  }, [voteId])
+
+  useEffect(() => {
+    fetchAvailability()
+    availTimerRef.current = setInterval(fetchAvailability, 60000)
+    const onVisible = () => { if (!document.hidden) fetchAvailability() }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      if (availTimerRef.current) clearInterval(availTimerRef.current)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, [fetchAvailability])
 
   async function handleSubmitVotes() {
     if (!voterName.trim() || submitting) return
@@ -95,10 +120,22 @@ export default function VotePage({ voteId }) {
       try {
         localStorage.setItem(LS_KEY(voteId), JSON.stringify({ voterName: voterName.trim(), votes: saved }))
       } catch {
-        // ignore storage errors (e.g. private mode quota)
+        // ignore storage errors
       }
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  async function handleMarkBooked(slotId) {
+    setBookingSlot(slotId)
+    try {
+      const res = await fetch(`/api/votes/${voteId}/slots/${slotId}/book`, { method: 'POST' })
+      if (!res.ok) return
+      setBookedSlots(prev => new Set([...prev, slotId]))
+      setAvailability(prev => ({ ...prev, [slotId]: null }))
+    } finally {
+      setBookingSlot(null)
     }
   }
 
@@ -113,7 +150,6 @@ export default function VotePage({ voteId }) {
 
   const unvotedCount = session?.slots.filter(s => pendingVotes[s.slot_id] === undefined).length ?? 0
 
-  // Set of slot IDs that have reached their threshold
   const winners = new Set(
     session?.slots
       .filter(s => (session.tally[s.slot_id] || 0) >= threshold(s.court_type))
@@ -122,16 +158,27 @@ export default function VotePage({ voteId }) {
 
   return (
     <div className="find-container">
+
+      {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
         <h2 style={{ margin: 0, fontSize: '1.1rem' }}>🗳️ {t('votePage.title')}</h2>
-        {submittedVotes !== null && (
-          <button className="vote-change-top-btn" onClick={handleChangeVote}>
-            ✏️ {t('votePage.change_vote')}
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          {submittedVotes !== null && (
+            <button className="vote-change-top-btn" onClick={handleChangeVote}>
+              ✏️ {t('votePage.change_vote')}
+            </button>
+          )}
+          <button
+            className={`vote-admin-toggle${adminMode ? ' vote-admin-toggle--active' : ''}`}
+            onClick={() => setAdminMode(m => !m)}
+            title={t('votePage.admin_mode')}
+          >
+            ⚙️
           </button>
-        )}
+        </div>
       </div>
 
-      {/* Name input (shown until votes submitted) */}
+      {/* Name input */}
       {submittedVotes === null && (
         <div className="find-field" style={{ marginBottom: '14px' }}>
           <label>{t('votePage.your_name')}</label>
@@ -145,7 +192,7 @@ export default function VotePage({ voteId }) {
         </div>
       )}
 
-      {/* Voter list with count */}
+      {/* Voter list */}
       {session?.voters?.length > 0 && (
         <p style={{ margin: '0 0 12px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
           {session.voters.join(' · ')}
@@ -164,22 +211,30 @@ export default function VotePage({ voteId }) {
           const thresh = threshold(slot.court_type)
           const pct = Math.min(100, Math.round((yesCount / thresh) * 100))
           const isWinner = winners.has(slot.slot_id)
-          // After submit, treat unvoted (undefined) as "can't attend" (false)
+          const isBooked = bookedSlots.has(slot.slot_id)
           const myAnswer = submittedVotes !== null
             ? (submittedVotes[slot.slot_id] ?? false)
             : pendingVotes[slot.slot_id]
+
+          const availBadge = isBooked
+            ? <span className="slot-avail-badge slot-avail-badge--booked">🎾 {t('votePage.avail_booked')}</span>
+            : availability[slot.slot_id] === true
+              ? <span className="slot-avail-badge slot-avail-badge--ok">✓ {t('votePage.avail_available')}</span>
+              : availability[slot.slot_id] === false
+                ? <span className="slot-avail-badge slot-avail-badge--gone">✗ {t('votePage.avail_unavailable')}</span>
+                : null
 
           return (
             <div
               key={slot.slot_id}
               className="find-slot"
               style={{
-                flexDirection: 'column', alignItems: 'flex-start', gap: '6px',
+                flexDirection: 'column', alignItems: 'flex-start', gap: '7px',
                 borderColor: isWinner ? 'rgba(6,182,212,0.5)' : undefined,
                 background: isWinner ? 'var(--accent-subtle)' : undefined,
               }}
             >
-              {/* Slot header */}
+              {/* Row 1: date/court info + availability badge */}
               <div style={{ display: 'flex', width: '100%', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                 <span style={{
                   fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase',
@@ -187,33 +242,32 @@ export default function VotePage({ voteId }) {
                   background: 'rgba(6,182,212,0.15)', color: 'var(--accent)', whiteSpace: 'nowrap',
                 }}>{weekday(slot.date, i18n.language)}</span>
                 <span className="find-slot-time">{formatDate(slot.date)} {slot.local_time}</span>
-                <span className="find-slot-court" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '200px' }}>{slot.court}</span>
+                <span className="find-slot-court" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '160px' }}>{slot.court}</span>
                 <span className="find-slot-meta">{slot.duration} min</span>
-                <span style={{ marginLeft: 'auto' }}>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
-                    <span className="attendees-label">{t('votePage.attendees')}: </span>{yesCount}/{thresh}
-                  </span>
-                </span>
+                {availBadge && <span style={{ marginLeft: 'auto' }}>{availBadge}</span>}
               </div>
 
-              {/* Progress bar */}
-              <div style={{ width: '100%', height: '4px', borderRadius: '2px', background: 'var(--border-color)' }}>
-                <div style={{
-                  height: '100%', borderRadius: '2px', background: 'var(--accent)',
-                  width: `${pct}%`, transition: 'width 0.4s ease',
-                }} />
-              </div>
-
-              {/* Voter name chips — always visible, no click needed */}
-              {slotAttendees.length > 0 && (
-                <div className="vote-attendee-chips">
-                  {slotAttendees.map(name => (
-                    <span key={name} className="vote-attendee-chip">👤 {name}</span>
-                  ))}
+              {/* Row 2: progress bar + voter names inline */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
+                <div style={{ position: 'relative', width: '72px', flexShrink: 0, height: '4px', borderRadius: '2px', background: 'var(--border-color)' }}>
+                  <div style={{
+                    position: 'absolute', inset: 0, borderRadius: '2px', background: 'var(--accent)',
+                    width: `${pct}%`, transition: 'width 0.4s ease',
+                  }} />
                 </div>
-              )}
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                  {yesCount}/{thresh}
+                </span>
+                {slotAttendees.length > 0 && (
+                  <div className="vote-attendee-chips" style={{ flex: 1 }}>
+                    {slotAttendees.map(name => (
+                      <span key={name} className="vote-attendee-chip">👤 {name}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
 
-              {/* Can attend toggle + book button */}
+              {/* Row 3: can-attend toggle | admin: mark-booked | book button */}
               <div style={{ display: 'flex', gap: '6px', alignItems: 'center', width: '100%' }}>
                 <button
                   style={{
@@ -232,10 +286,23 @@ export default function VotePage({ voteId }) {
                 >
                   ✓ {t('votePage.can_attend')}
                 </button>
+                {adminMode && !isBooked && (
+                  <button
+                    className="slot-mark-booked-btn"
+                    disabled={bookingSlot === slot.slot_id}
+                    onClick={() => handleMarkBooked(slot.slot_id)}
+                  >
+                    {bookingSlot === slot.slot_id ? '…' : `📌 ${t('votePage.mark_booked')}`}
+                  </button>
+                )}
                 <a
-                  href={isWinner ? slot.booking_link : undefined}
+                  href={isWinner && !isBooked ? slot.booking_link : undefined}
                   className="find-book-btn"
-                  style={{ marginLeft: 'auto', visibility: isWinner ? 'visible' : 'hidden', pointerEvents: isWinner ? 'auto' : 'none' }}
+                  style={{
+                    marginLeft: 'auto',
+                    visibility: isWinner && !isBooked ? 'visible' : 'hidden',
+                    pointerEvents: isWinner && !isBooked ? 'auto' : 'none',
+                  }}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -247,7 +314,7 @@ export default function VotePage({ voteId }) {
         })}
       </div>
 
-      {/* Unvoted slots hint */}
+      {/* Unvoted hint */}
       {submittedVotes === null && voterName.trim() && unvotedCount > 0 && (
         <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '10px 0 0' }}>
           {t('votePage.unvoted_hint', { count: unvotedCount })}
@@ -275,7 +342,6 @@ export default function VotePage({ voteId }) {
         )}
       </div>
 
-      {/* Submit error */}
       {submitError && (
         <p style={{ fontSize: '0.8rem', color: 'rgb(220,38,38)', marginTop: '8px' }}>{submitError}</p>
       )}
