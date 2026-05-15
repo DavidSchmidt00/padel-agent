@@ -191,7 +191,7 @@ Branch Protection unter `Settings → Branches`:
 - **`staging`** — optional: PR-Pflicht empfohlen
 
 Railway deploys per nativer GitHub-Integration (kein Token nötig):
-- `staging`-Branch → Railway `test`-Environment (auto-deploy)
+- `staging`-Branch → Railway `staging`-Environment (auto-deploy)
 - `main`-Branch → Railway `production`-Environment (auto-deploy nach Merge)
 
 ## Documentation
