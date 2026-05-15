@@ -3,7 +3,14 @@ name: CI
 on:
   push:
     branches: [main, staging]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
   pull_request:
+    branches: [main, staging]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
 
 jobs:
   test:
