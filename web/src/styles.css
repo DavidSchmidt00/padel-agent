@@ -1983,6 +1983,31 @@ body {
   white-space: nowrap;
 }
 
+/* Admin mode toggle in VotePage header */
+.vote-admin-toggle {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 0.25rem 0.4rem;
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--text-tertiary);
+  transition: color 0.12s, background 0.12s, border-color 0.12s;
+}
+
+.vote-admin-toggle:hover {
+  color: var(--text-secondary);
+  background: var(--bg-surface-raised);
+  border-color: var(--border-color);
+}
+
+.vote-admin-toggle--active {
+  color: var(--accent);
+  background: var(--accent-subtle);
+  border-color: rgba(6, 182, 212, 0.4);
+}
+
 /* Change-vote button shown at top of VotePage header */
 .vote-change-top-btn {
   background: var(--bg-surface-raised);

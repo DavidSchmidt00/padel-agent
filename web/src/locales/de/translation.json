@@ -158,6 +158,7 @@
         "submitted_label": "Verfügbarkeit gespeichert ✓",
         "submit_error": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
         "change_vote": "Ändern",
+        "admin_mode": "Organisator-Ansicht",
         "avail_available": "Noch verfügbar",
         "avail_unavailable": "Nicht mehr verfügbar",
         "avail_booked": "Bereits für uns gebucht",
