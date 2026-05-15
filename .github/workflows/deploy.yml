@@ -1,0 +1,82 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: [CI]
+    branches: [staging, main]
+    types: [completed]
+
+jobs:
+  # ── Staging → Railway "test" environment ─────────────────────────────────
+  deploy-staging:
+    name: Deploy to Staging (test)
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'staging'
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: staging
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy padel-agent → test
+        run: |
+          railway up \
+            --project ${{ vars.RAILWAY_PROJECT_ID }} \
+            --environment test \
+            --service padel-agent \
+            --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+      - name: Deploy whatsapp-agent → test
+        run: |
+          railway up \
+            --project ${{ vars.RAILWAY_PROJECT_ID }} \
+            --environment test \
+            --service whatsapp-agent \
+            --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+  # ── Main → Railway "production" environment (manual approval required) ───
+  deploy-production:
+    name: Deploy to Production
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    # GitHub Environment "production" must have a required reviewer configured.
+    # The deploy is gated until you approve it in the GitHub Actions UI.
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy padel-agent → production
+        run: |
+          railway up \
+            --project ${{ vars.RAILWAY_PROJECT_ID }} \
+            --environment production \
+            --service padel-agent \
+            --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+      - name: Deploy whatsapp-agent → production
+        run: |
+          railway up \
+            --project ${{ vars.RAILWAY_PROJECT_ID }} \
+            --environment production \
+            --service whatsapp-agent \
+            --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}

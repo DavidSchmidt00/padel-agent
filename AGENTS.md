@@ -158,12 +158,42 @@ WhatsApp: stored in `UserState.profile` → `data/whatsapp_users.db` (SQLite).
 
 ## Git Conventions
 
-- **Branching**: Create a new branch per task (`feat/`, `fix/`, `refactor/`, `docs/`, `chore/`). Do not work directly on `main` unless instructed.
-- **Conventional Commits**: Always use conventional commits (e.g., `feat(scope): description`, `fix:`, `docs:`, `refactor:`).
-- **Attribution**: When the agent is the sole author of a commit:
+### Branching Strategy
+
+```
+feature/fix/… branch
+        │
+        ▼  PR (CI must pass)
+    staging  ──── auto-deploy ──▶  Railway "test" environment
+        │
+        ▼  PR (CI must pass + manual approval in GitHub)
+      main   ──── deploy (gated) ─▶  Railway "production" environment
+```
+
+- **Feature work**: always branch off `staging` (`feat/`, `fix/`, `refactor/`, `docs/`, `chore/`). Never branch off `main` directly.
+- **Staging**: merge feature branches → `staging` via PR. CI must be green. Triggers auto-deploy to Railway `test`.
+- **Production**: merge `staging` → `main` via PR. Requires CI + manual approval of the GitHub `production` environment. Only then does Railway `production` get deployed.
+- **Do not push directly** to `staging` or `main` — always use PRs.
+
+### Conventional Commits
+Always use conventional commits (e.g., `feat(scope): description`, `fix:`, `docs:`, `refactor:`).
+
+### Attribution
+When the agent is the sole author of a commit:
   - Prefix the commit title with `🤖 `.
   - Add a `Co-Authored-By` trailer: `Co-Authored-By: AI Agent <noreply@agent>`.
-- Pre-commit hooks run automatically on commit (ruff + mypy).
+
+Pre-commit hooks run automatically on commit (ruff + mypy).
+
+### CI/CD Secrets & Variables (one-time setup)
+| GitHub Secret / Variable | Value |
+|---|---|
+| `RAILWAY_TOKEN` (secret) | Railway API token (Settings → Tokens) |
+| `RAILWAY_PROJECT_ID` (variable) | `d5ae860a-16e6-4342-9fcf-f3f725efadee` |
+
+GitHub Environments to configure at `Settings → Environments`:
+- **`staging`** — no approval required (auto-deploy on push to `staging` branch)
+- **`production`** — add yourself as Required Reviewer (blocks deploy until you approve in GitHub Actions UI)
 
 ## Documentation
 
