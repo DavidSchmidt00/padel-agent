@@ -1949,8 +1949,7 @@ body {
 .vote-voters-empty {
   margin: 0 0 12px;
   font-size: 0.8rem;
-  color: var(--text-tertiary);
-  font-style: italic;
+  color: var(--text-secondary);
 }
 
 /* Slot card list */
@@ -1996,7 +1995,6 @@ body {
   gap: 5px;
   font-size: 0.85rem;
   color: var(--text-primary);
-  overflow: hidden;
 }
 
 .vote-card-meta-sub {
@@ -2042,9 +2040,15 @@ body {
   flex-shrink: 0;
 }
 
+.vote-card-price {
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  flex-shrink: 0;
+}
+
 /* Inline availability text (no pill) */
 .vote-avail-text {
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   font-weight: 500;
   white-space: nowrap;
   flex-shrink: 0;
@@ -2053,8 +2057,18 @@ body {
 }
 
 .vote-avail-text--ok { color: rgb(22, 163, 74); }
-.vote-avail-text--gone { color: rgb(220, 38, 38); }
+.vote-avail-text--gone { color: rgb(220, 38, 38); font-weight: 700; }
 .vote-avail-text--booked { color: rgb(124, 58, 237); }
+.vote-avail-text--checking {
+  color: var(--text-tertiary);
+  animation: vote-avail-pulse 1.4s ease-in-out infinite;
+  letter-spacing: 0.05em;
+}
+
+@keyframes vote-avail-pulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 1; }
+}
 
 /* Row 2: progress + names + actions */
 .vote-card-row {
@@ -2099,7 +2113,7 @@ body {
 
 .vote-card-actions {
   display: flex;
-  gap: 5px;
+  gap: 0;
   align-items: center;
   margin-left: auto;
   flex-shrink: 0;
@@ -2118,7 +2132,6 @@ body {
   justify-content: center;
   flex-shrink: 0;
   padding: 0;
-  margin: -8px;
 }
 
 .vote-attend-circle {
@@ -2149,8 +2162,11 @@ body {
 }
 
 .vote-attend-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.7;
+  cursor: default;
+}
+
+.vote-attend-btn:disabled:not(.vote-attend-btn--yes) .vote-attend-circle {
+  opacity: 0.45;
 }
 
 /* Icon-only admin mark-booked — 44px tap target, 28px visual circle */
@@ -2166,7 +2182,6 @@ body {
   justify-content: center;
   flex-shrink: 0;
   padding: 0;
-  margin: -8px;
 }
 
 .vote-mark-booked-circle {
@@ -2222,6 +2237,12 @@ body {
   padding: 9px 12px;
   font-size: 0.88rem;
   letter-spacing: 0.01em;
+  animation: vote-cta-appear 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes vote-cta-appear {
+  from { opacity: 0; transform: translateY(4px) scale(0.97); }
+  to   { opacity: 1; transform: none; }
 }
 
 /* Admin mode toggle */
@@ -2312,7 +2333,7 @@ body {
 
 /* Expires note */
 .vote-expires-note {
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   color: var(--text-secondary);
   margin-top: 16px;
 }

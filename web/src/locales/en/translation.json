@@ -160,6 +160,7 @@
         "submit_error": "Something went wrong. Please try again.",
         "change_vote": "Change",
         "admin_mode": "Organiser view",
+        "avail_checking": "Checking…",
         "avail_available": "Still available",
         "avail_unavailable": "No longer available",
         "avail_booked": "Already booked for us",

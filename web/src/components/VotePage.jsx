@@ -243,6 +243,9 @@ export default function VotePage({ voteId }) {
                   <span className="vote-card-date">{formatDate(slot.date)}</span>
                   <span className="vote-card-sep">·</span>
                   <span className="vote-card-time">{slot.local_time}</span>
+                  {availStatus === 'unknown' && !isBooked && (
+                    <span className="vote-avail-text vote-avail-text--checking" aria-label={t('votePage.avail_checking')}>···</span>
+                  )}
                   {availStatus === 'ok' && (
                     <span className="vote-avail-text vote-avail-text--ok">✓ {t('votePage.avail_available')}</span>
                   )}
@@ -257,13 +260,22 @@ export default function VotePage({ voteId }) {
                   <span className="vote-card-court">{slot.court}</span>
                   <span className="vote-card-sep">·</span>
                   <span className="vote-card-dur">{slot.duration}m</span>
+                  {slot.price && (
+                    <>
+                      <span className="vote-card-sep">·</span>
+                      <span className="vote-card-price">{slot.price}</span>
+                    </>
+                  )}
                 </div>
               </div>
 
               {/* Row 2: progress + names + actions */}
               <div className="vote-card-row">
                 <div className="vote-card-bar">
-                  <div className="vote-card-bar-fill" style={{ width: `${pct}%` }} />
+                  <div
+                    className="vote-card-bar-fill"
+                    style={{ width: `${pct}%`, background: pct >= 100 ? 'rgb(22, 163, 74)' : undefined }}
+                  />
                 </div>
                 <span className="vote-card-count">{yesCount}/{thresh}</span>
                 {slotAttendees.length > 0 && (
