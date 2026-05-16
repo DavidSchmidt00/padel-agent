@@ -30,7 +30,7 @@ function todayStr() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-export default function FindMode({ region, profile, initialParams, onParamsConsumed }) {
+export default function FindMode({ region, profile, initialParams, onParamsConsumed, onVoteCreated }) {
   const { t, i18n } = useTranslation()
 
   const [clubs, setClubs] = useState(
@@ -335,6 +335,7 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
       const data = await res.json()
       const shareUrl = `${window.location.origin}/vote/${data.vote_id}`
       setVoteUrl(shareUrl)
+      onVoteCreated?.(data.vote_id)
       await navigator.clipboard.writeText(shareUrl).catch(() => {})
       containerRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
     } catch {

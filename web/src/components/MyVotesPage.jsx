@@ -1,0 +1,114 @@
+import { useState, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
+
+function formatDate(iso) {
+  const [, m, d] = iso.split('-')
+  return `${d}.${m}`
+}
+
+export default function MyVotesPage({ myVotes, onRemoveVote, onNavigateToVote }) {
+  const { t } = useTranslation()
+  const [sessions, setSessions] = useState({})
+  const fetchedRef = useRef(new Set())
+
+  useEffect(() => {
+    for (const { vote_id } of myVotes) {
+      if (fetchedRef.current.has(vote_id)) continue
+      fetchedRef.current.add(vote_id)
+      fetch(`/api/votes/${vote_id}`)
+        .then((res) => {
+          if (res.status === 404) return null
+          if (!res.ok) throw new Error(`HTTP ${res.status}`)
+          return res.json()
+        })
+        .then((data) => {
+          setSessions((prev) => ({ ...prev, [vote_id]: data ?? 'expired' }))
+        })
+        .catch(() => {
+          setSessions((prev) => ({ ...prev, [vote_id]: 'error' }))
+        })
+    }
+  }, [myVotes])
+
+  if (myVotes.length === 0) {
+    return (
+      <div className="find-container">
+        <div className="my-votes-empty">
+          <p className="my-votes-empty-icon">🗳️</p>
+          <p className="my-votes-empty-title">{t('myVotes.empty_title')}</p>
+          <p className="my-votes-empty-sub">{t('myVotes.empty_sub')}</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="find-container">
+      <h2 className="my-votes-heading">{t('myVotes.title')}</h2>
+      <div className="my-votes-list">
+        {myVotes.map(({ vote_id }) => {
+          const session = sessions[vote_id]
+          const isExpired = session === 'expired' || session === 'error'
+          const isLoading = session === undefined
+
+          let dateRange = null
+          let voterCount = null
+          let bookedCount = 0
+          if (session && !isExpired) {
+            const dates = session.slots.map((s) => s.date)
+            const minDate = dates.reduce((a, b) => (a < b ? a : b), dates[0])
+            const maxDate = dates.reduce((a, b) => (a > b ? a : b), dates[0])
+            dateRange =
+              minDate === maxDate
+                ? formatDate(minDate)
+                : `${formatDate(minDate)}–${formatDate(maxDate)}`
+            voterCount = session.voter_count
+            bookedCount = (session.booked_slots || []).length
+          }
+
+          return (
+            <div
+              key={vote_id}
+              className={`my-votes-item${isExpired ? ' my-votes-item--expired' : ''}`}
+            >
+              <button
+                className="my-votes-item-main"
+                onClick={() => onNavigateToVote(vote_id)}
+                disabled={isExpired}
+              >
+                <span className="my-votes-item-icon">🗳️</span>
+                <div className="my-votes-item-info">
+                  <span className="my-votes-item-id">{vote_id}</span>
+                  {isLoading && (
+                    <span className="my-votes-item-sub">{t('myVotes.loading')}</span>
+                  )}
+                  {isExpired && (
+                    <span className="my-votes-item-sub my-votes-item-expired-label">
+                      {t('myVotes.expired')}
+                    </span>
+                  )}
+                  {!isLoading && !isExpired && (
+                    <span className="my-votes-item-sub">
+                      {dateRange}
+                      {voterCount != null &&
+                        ` · ${t('myVotes.voters', { count: voterCount })}`}
+                      {bookedCount > 0 && ' · 📌'}
+                    </span>
+                  )}
+                </div>
+              </button>
+              <button
+                className="my-votes-item-remove"
+                onClick={() => onRemoveVote(vote_id)}
+                aria-label={t('myVotes.remove')}
+                title={t('myVotes.remove')}
+              >
+                ×
+              </button>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}

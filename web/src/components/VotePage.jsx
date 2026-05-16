@@ -17,7 +17,7 @@ function threshold(courtType) {
 
 const LS_KEY = (voteId) => `vote-${voteId}`
 
-export default function VotePage({ voteId }) {
+export default function VotePage({ voteId, onVoteVisited }) {
   const { t, i18n } = useTranslation()
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -49,6 +49,7 @@ export default function VotePage({ voteId }) {
     }
   }, [voteId])
 
+  const visitedRef = useRef(false)
   const fetchSession = useCallback(async () => {
     try {
       const res = await fetch(`/api/votes/${voteId}`)
@@ -61,10 +62,14 @@ export default function VotePage({ voteId }) {
       const data = await res.json()
       setSession(data)
       if (data.booked_slots?.length) setBookedSlots(new Set(data.booked_slots))
+      if (!visitedRef.current) {
+        visitedRef.current = true
+        onVoteVisited?.(voteId)
+      }
     } finally {
       setLoading(false)
     }
-  }, [voteId])
+  }, [voteId, onVoteVisited])
 
   useEffect(() => {
     fetchSession()

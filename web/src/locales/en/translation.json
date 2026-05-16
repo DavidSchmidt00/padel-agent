@@ -143,6 +143,16 @@
     "chat": {
         "open_in_find_mode": "Open in Find Mode"
     },
+    "myVotes": {
+        "title": "My Votes",
+        "empty_title": "No votes yet",
+        "empty_sub": "Create a group vote from Find mode — it will appear here.",
+        "loading": "Loading…",
+        "expired": "Expired",
+        "voters_one": "{{count}} voter",
+        "voters_other": "{{count}} voters",
+        "remove": "Remove from list"
+    },
     "votePage": {
         "title": "Group Vote",
         "your_name": "Your name",
