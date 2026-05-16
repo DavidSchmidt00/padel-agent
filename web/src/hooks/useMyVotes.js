@@ -25,10 +25,12 @@ function persist(votes) {
 export default function useMyVotes() {
   const [votes, setVotes] = useState(load)
 
-  const addVote = useCallback((vote_id) => {
+  const addVote = useCallback((vote_id, label) => {
     setVotes((prev) => {
       const filtered = prev.filter((v) => v.vote_id !== vote_id)
-      const next = [{ vote_id, saved_at: new Date().toISOString() }, ...filtered].slice(0, MAX_VOTES)
+      const entry = { vote_id, saved_at: new Date().toISOString() }
+      if (label) entry.label = label
+      const next = [entry, ...filtered].slice(0, MAX_VOTES)
       persist(next)
       return next
     })

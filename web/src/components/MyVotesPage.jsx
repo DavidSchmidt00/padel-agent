@@ -6,6 +6,14 @@ function formatDate(iso) {
   return `${d}.${m}`
 }
 
+function deriveLabel(session) {
+  const dates = session.slots?.map((s) => s.date) ?? []
+  if (!dates.length) return null
+  const minDate = dates.reduce((a, b) => (a < b ? a : b), dates[0])
+  const maxDate = dates.reduce((a, b) => (a > b ? a : b), dates[0])
+  return minDate === maxDate ? formatDate(minDate) : `${formatDate(minDate)}–${formatDate(maxDate)}`
+}
+
 export default function MyVotesPage({ myVotes, onRemoveVote, onNavigateToVote }) {
   const { t } = useTranslation()
   const [sessions, setSessions] = useState({})
@@ -46,22 +54,15 @@ export default function MyVotesPage({ myVotes, onRemoveVote, onNavigateToVote })
     <div className="find-container">
       <h2 className="my-votes-heading">{t('myVotes.title')}</h2>
       <div className="my-votes-list">
-        {myVotes.map(({ vote_id }) => {
+        {myVotes.map(({ vote_id, label: storedLabel }) => {
           const session = sessions[vote_id]
           const isExpired = session === 'expired' || session === 'error'
           const isLoading = session === undefined
 
-          let dateRange = null
+          const label = storedLabel || (!isExpired && !isLoading && session ? deriveLabel(session) : null)
           let voterCount = null
           let bookedCount = 0
           if (session && !isExpired) {
-            const dates = session.slots.map((s) => s.date)
-            const minDate = dates.reduce((a, b) => (a < b ? a : b), dates[0])
-            const maxDate = dates.reduce((a, b) => (a > b ? a : b), dates[0])
-            dateRange =
-              minDate === maxDate
-                ? formatDate(minDate)
-                : `${formatDate(minDate)}–${formatDate(maxDate)}`
             voterCount = session.voter_count
             bookedCount = (session.booked_slots || []).length
           }
@@ -78,23 +79,17 @@ export default function MyVotesPage({ myVotes, onRemoveVote, onNavigateToVote })
               >
                 <span className="my-votes-item-icon">🗳️</span>
                 <div className="my-votes-item-info">
-                  <span className="my-votes-item-id">{vote_id}</span>
-                  {isLoading && (
-                    <span className="my-votes-item-sub">{t('myVotes.loading')}</span>
-                  )}
-                  {isExpired && (
-                    <span className="my-votes-item-sub my-votes-item-expired-label">
-                      {t('myVotes.expired')}
-                    </span>
-                  )}
-                  {!isLoading && !isExpired && (
-                    <span className="my-votes-item-sub">
-                      {dateRange}
-                      {voterCount != null &&
-                        ` · ${t('myVotes.voters', { count: voterCount })}`}
-                      {bookedCount > 0 && ' · 📌'}
-                    </span>
-                  )}
+                  <span className="my-votes-item-label">
+                    {isExpired
+                      ? (label || vote_id)
+                      : (label || (isLoading ? t('myVotes.loading') : vote_id))}
+                  </span>
+                  <span className={`my-votes-item-sub${isExpired ? ' my-votes-item-sub--expired' : ''}`}>
+                    {isExpired && t('myVotes.expired')}
+                    {!isExpired && !isLoading && voterCount != null &&
+                      t('myVotes.voters', { count: voterCount })}
+                    {!isExpired && !isLoading && bookedCount > 0 && ' · 📌'}
+                  </span>
                 </div>
               </button>
               <button

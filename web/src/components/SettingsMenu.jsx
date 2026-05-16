@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { REGIONS } from '../regions'
 
-export default function SettingsMenu({ region, onRegionChange, theme, onThemeToggle, onNavigateAbout }) {
+export default function SettingsMenu({ region, onRegionChange, theme, onThemeToggle, onNavigateAbout, onNavigateMyVotes }) {
     const { t } = useTranslation()
     const [open, setOpen] = useState(false)
     const [regionOpen, setRegionOpen] = useState(false)
@@ -100,6 +100,12 @@ export default function SettingsMenu({ region, onRegionChange, theme, onThemeTog
 
                     {/* ── Links ── */}
                     <div className="settings-section">
+                        <button
+                          className="settings-link-row"
+                          onClick={() => { onNavigateMyVotes(); setOpen(false) }}
+                        >
+                          🗳️ {t('myVotes.title')}
+                        </button>
                         <button
                           className="settings-link-row"
                           onClick={() => { onNavigateAbout(); setOpen(false) }}

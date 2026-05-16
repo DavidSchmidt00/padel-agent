@@ -335,7 +335,14 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
       const data = await res.json()
       const shareUrl = `${window.location.origin}/vote/${data.vote_id}`
       setVoteUrl(shareUrl)
-      onVoteCreated?.(data.vote_id)
+      const slotDates = chosenSlots.map((s) => s.date)
+      const minDate = slotDates.reduce((a, b) => (a < b ? a : b), slotDates[0])
+      const maxDate = slotDates.reduce((a, b) => (a > b ? a : b), slotDates[0])
+      const dateRange =
+        minDate === maxDate ? formatShortDate(minDate) : `${formatShortDate(minDate)}–${formatShortDate(maxDate)}`
+      const clubNames = clubs.map((c) => c.name).join(', ')
+      const label = clubNames ? `${clubNames} · ${dateRange}` : dateRange
+      onVoteCreated?.(data.vote_id, label)
       await navigator.clipboard.writeText(shareUrl).catch(() => {})
       containerRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
     } catch {
