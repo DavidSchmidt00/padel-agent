@@ -121,23 +121,13 @@ export default function App() {
           </button>
         </div>
         <div className="header-controls">
-          <button
-            className={`my-votes-nav-btn${mode === 'votes' ? ' active' : ''}`}
-            onClick={navigateToMyVotes}
-            aria-label={t('myVotes.title')}
-            title={t('myVotes.title')}
-          >
-            🗳️
-            {myVotes.length > 0 && (
-              <span className="my-votes-badge">{myVotes.length}</span>
-            )}
-          </button>
           <SettingsMenu
             region={region}
             onRegionChange={setRegionId}
             theme={theme}
             onThemeToggle={toggleTheme}
             onNavigateAbout={navigateToAbout}
+            onNavigateMyVotes={navigateToMyVotes}
           />
         </div>
       </header>

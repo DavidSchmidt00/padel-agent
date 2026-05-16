@@ -64,7 +64,16 @@ export default function VotePage({ voteId, onVoteVisited }) {
       if (data.booked_slots?.length) setBookedSlots(new Set(data.booked_slots))
       if (!visitedRef.current) {
         visitedRef.current = true
-        onVoteVisited?.(voteId)
+        const dates = data.slots?.map((s) => s.date) ?? []
+        if (dates.length) {
+          const minDate = dates.reduce((a, b) => (a < b ? a : b), dates[0])
+          const maxDate = dates.reduce((a, b) => (a > b ? a : b), dates[0])
+          const dateRange =
+            minDate === maxDate ? formatDate(minDate) : `${formatDate(minDate)}–${formatDate(maxDate)}`
+          onVoteVisited?.(voteId, dateRange)
+        } else {
+          onVoteVisited?.(voteId)
+        }
       }
     } finally {
       setLoading(false)

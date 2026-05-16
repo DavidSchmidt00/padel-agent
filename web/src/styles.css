@@ -2940,54 +2940,6 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════════
-   My Votes — nav button
-   ═══════════════════════════════════════════════════════ */
-.my-votes-nav-btn {
-  position: relative;
-  background: var(--bg-input);
-  border: 1.5px solid var(--border-input);
-  border-radius: 8px;
-  padding: 0.4rem 0.6rem;
-  font-size: 1.1rem;
-  line-height: 1;
-  cursor: pointer;
-  transition: border-color var(--transition-speed), background var(--transition-speed);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2.1rem;
-}
-
-.my-votes-nav-btn:hover {
-  border-color: var(--accent);
-}
-
-.my-votes-nav-btn.active {
-  border-color: var(--accent);
-  background: var(--accent-subtle);
-}
-
-.my-votes-badge {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  background: var(--accent);
-  color: var(--text-on-accent);
-  font-size: 0.6rem;
-  font-weight: 700;
-  font-family: inherit;
-  border-radius: 9999px;
-  min-width: 15px;
-  height: 15px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 3px;
-  line-height: 1;
-  pointer-events: none;
-}
-
-/* ═══════════════════════════════════════════════════════
    My Votes — page
    ═══════════════════════════════════════════════════════ */
 .my-votes-heading {
@@ -3069,7 +3021,7 @@ body {
   cursor: default;
 }
 
-.my-votes-item-main:not(:disabled):hover .my-votes-item-id {
+.my-votes-item-main:not(:disabled):hover .my-votes-item-label {
   color: var(--accent);
 }
 
@@ -3085,12 +3037,14 @@ body {
   min-width: 0;
 }
 
-.my-votes-item-id {
+.my-votes-item-label {
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--text-primary);
-  font-family: 'Courier New', monospace;
   transition: color var(--transition-speed);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .my-votes-item-sub {
@@ -3101,7 +3055,7 @@ body {
   text-overflow: ellipsis;
 }
 
-.my-votes-item-expired-label {
+.my-votes-item-sub--expired {
   color: var(--error-color);
 }
 
