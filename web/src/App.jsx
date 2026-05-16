@@ -3,10 +3,12 @@ import { useTranslation } from 'react-i18next'
 import Chat from './components/Chat'
 import FindMode from './components/FindMode'
 import VotePage from './components/VotePage'
+import MyVotesPage from './components/MyVotesPage'
 import AboutPage from './components/AboutPage'
 import SettingsMenu from './components/SettingsMenu'
 import useRegion from './hooks/useRegion'
 import useProfile from './hooks/useProfile'
+import useMyVotes from './hooks/useMyVotes'
 
 const LAST_ROUTE_KEY = 'padel-last-route'
 
@@ -15,6 +17,7 @@ function modeFromPath() {
   if (p === '/about') return 'about'
   if (p === '/find') return 'find'
   if (p.startsWith('/vote/')) return 'vote'
+  if (p === '/votes') return 'votes'
   if (p === '/chat') return 'chat'
   // Root or unknown path: restore last route, or show about for first-timers
   try {
@@ -47,6 +50,7 @@ export default function App() {
 
   const { region, setRegionId } = useRegion()
   const { profile } = useProfile()
+  const { votes: myVotes, addVote, removeVote } = useMyVotes()
   const { t, i18n } = useTranslation()
   const chatRef = useRef(null)
 
@@ -84,6 +88,17 @@ export default function App() {
     setMode('about')
   }
 
+  function navigateToMyVotes() {
+    history.pushState(null, '', '/votes')
+    setMode('votes')
+  }
+
+  function navigateToVote(vote_id) {
+    history.pushState(null, '', `/vote/${vote_id}`)
+    setVoteId(vote_id)
+    setMode('vote')
+  }
+
   return (
     <div className="app-root">
       <header className="app-header">
@@ -106,6 +121,17 @@ export default function App() {
           </button>
         </div>
         <div className="header-controls">
+          <button
+            className={`my-votes-nav-btn${mode === 'votes' ? ' active' : ''}`}
+            onClick={navigateToMyVotes}
+            aria-label={t('myVotes.title')}
+            title={t('myVotes.title')}
+          >
+            🗳️
+            {myVotes.length > 0 && (
+              <span className="my-votes-badge">{myVotes.length}</span>
+            )}
+          </button>
           <SettingsMenu
             region={region}
             onRegionChange={setRegionId}
@@ -128,10 +154,18 @@ export default function App() {
             profile={profile}
             initialParams={pendingFindParams}
             onParamsConsumed={handleParamsConsumed}
+            onVoteCreated={addVote}
           />
         </div>
         <div style={{ display: mode === 'vote' ? 'contents' : 'none' }}>
-          {voteId && <VotePage voteId={voteId} />}
+          {voteId && <VotePage voteId={voteId} onVoteVisited={addVote} />}
+        </div>
+        <div style={{ display: mode === 'votes' ? 'contents' : 'none' }}>
+          <MyVotesPage
+            myVotes={myVotes}
+            onRemoveVote={removeVote}
+            onNavigateToVote={navigateToVote}
+          />
         </div>
         <div style={{ display: mode === 'about' ? 'contents' : 'none' }}>
           <AboutPage onNavigate={navigateTo} />
