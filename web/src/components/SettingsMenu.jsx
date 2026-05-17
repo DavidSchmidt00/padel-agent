@@ -98,7 +98,7 @@ export default function SettingsMenu({ region, onRegionChange, theme, onThemeTog
                         </div>
                     </div>
 
-                    {/* ── Links ── */}
+                    {/* ── My Votes ── */}
                     <div className="settings-section">
                         <button
                           className="settings-link-row"
@@ -106,6 +106,10 @@ export default function SettingsMenu({ region, onRegionChange, theme, onThemeTog
                         >
                           🗳️ {t('myVotes.title')}
                         </button>
+                    </div>
+
+                    {/* ── Info ── */}
+                    <div className="settings-section">
                         <button
                           className="settings-link-row"
                           onClick={() => { onNavigateAbout(); setOpen(false) }}
