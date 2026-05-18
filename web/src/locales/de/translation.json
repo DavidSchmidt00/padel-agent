@@ -143,6 +143,9 @@
     "chat": {
         "open_in_find_mode": "Im Suchen-Modus öffnen"
     },
+    "nav": {
+        "profile": "Profil"
+    },
     "myVotes": {
         "title": "Meine Abstimmungen",
         "empty_title": "Noch keine Abstimmungen",
