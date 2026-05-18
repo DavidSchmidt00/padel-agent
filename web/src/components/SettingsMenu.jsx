@@ -96,16 +96,16 @@ export default function SettingsMenu({ region, onRegionChange, theme, onThemeTog
                                 <div className="settings-account-sub">{t('settings.sign_in_soon')}</div>
                             </div>
                         </div>
-                    </div>
-
-                    {/* ── Links ── */}
-                    <div className="settings-section">
                         <button
                           className="settings-link-row"
                           onClick={() => { onNavigateMyVotes(); setOpen(false) }}
                         >
                           🗳️ {t('myVotes.title')}
                         </button>
+                    </div>
+
+                    {/* ── Links ── */}
+                    <div className="settings-section">
                         <button
                           className="settings-link-row"
                           onClick={() => { onNavigateAbout(); setOpen(false) }}
