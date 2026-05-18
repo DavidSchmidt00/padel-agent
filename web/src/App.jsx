@@ -11,6 +11,7 @@ import useProfile from './hooks/useProfile'
 import useMyVotes from './hooks/useMyVotes'
 
 const LAST_ROUTE_KEY = 'padel-last-route'
+// 'about' and 'vote' are omitted intentionally — they are never the target of navigateTo()
 const MODE_PATHS = { chat: '/chat', find: '/find', profile: '/profile' }
 
 function modeFromPath() {
@@ -126,6 +127,7 @@ export default function App() {
             myVotes={myVotes}
             onRemoveVote={removeVote}
             onNavigateToVote={navigateToVote}
+            onNavigateToFind={() => navigateTo('find')}
           />
         </div>
         <div style={{ display: mode === 'about' ? 'contents' : 'none' }}>

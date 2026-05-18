@@ -14,7 +14,7 @@ function deriveLabel(session) {
   return minDate === maxDate ? formatDate(minDate) : `${formatDate(minDate)}–${formatDate(maxDate)}`
 }
 
-export default function ProfilePage({ myVotes, onRemoveVote, onNavigateToVote }) {
+export default function ProfilePage({ myVotes, onRemoveVote, onNavigateToVote, onNavigateToFind }) {
   const { t } = useTranslation()
   const [sessions, setSessions] = useState({})
   const fetchedRef = useRef(new Set())
@@ -53,6 +53,9 @@ export default function ProfilePage({ myVotes, onRemoveVote, onNavigateToVote })
           <p className="my-votes-empty-icon">🗳️</p>
           <p className="my-votes-empty-title">{t('myVotes.empty_title')}</p>
           <p className="my-votes-empty-sub">{t('myVotes.empty_sub')}</p>
+          <button className="my-votes-empty-cta" onClick={onNavigateToFind}>
+            {t('findMode.mode_find')} →
+          </button>
         </div>
       ) : (
         <div className="my-votes-list">
