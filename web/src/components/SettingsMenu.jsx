@@ -40,6 +40,16 @@ export default function SettingsMenu({ region, onRegionChange, theme, onThemeTog
             {open && (
                 <div className="settings-dropdown">
 
+                    {/* ── My Votes ── */}
+                    <div className="settings-section">
+                        <button
+                          className="settings-link-row"
+                          onClick={() => { onNavigateMyVotes(); setOpen(false) }}
+                        >
+                          🗳️ {t('myVotes.title')}
+                        </button>
+                    </div>
+
                     {/* ── Settings ── */}
                     <div className="settings-section">
                         <div className="settings-section-label">{t('settings.title')}</div>
@@ -96,16 +106,6 @@ export default function SettingsMenu({ region, onRegionChange, theme, onThemeTog
                                 <div className="settings-account-sub">{t('settings.sign_in_soon')}</div>
                             </div>
                         </div>
-                    </div>
-
-                    {/* ── My Votes ── */}
-                    <div className="settings-section">
-                        <button
-                          className="settings-link-row"
-                          onClick={() => { onNavigateMyVotes(); setOpen(false) }}
-                        >
-                          🗳️ {t('myVotes.title')}
-                        </button>
                     </div>
 
                     {/* ── Info ── */}
