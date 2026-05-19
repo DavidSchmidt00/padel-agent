@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#22ff7a"/>
+      <stop offset="100%" stop-color="#00d4ff"/>
+    </linearGradient>
+  </defs>
+
+  <!-- App icon background -->
+  <rect width="512" height="512" rx="108" fill="#0f1117"/>
+
+  <!-- Handle (drawn behind head so they blend at the joint) -->
+  <rect x="231" y="316" width="50" height="134" rx="22" fill="url(#grad)"/>
+
+  <!-- Racket head — true oval, clearly not a rectangle -->
+  <ellipse cx="256" cy="202" rx="120" ry="134" fill="url(#grad)"/>
+
+  <!--
+    Holes: 4 columns × 5 rows, evenly spaced within the ellipse.
+    Columns symmetric about cx=256 at offsets ±46, ±15 → 210, 241, 271, 302
+    Rows spaced 37 px: 138, 175, 212, 249, 286
+    r=11 so edge-to-edge gap is ≈13 px — readable at small sizes.
+  -->
+  <circle cx="210" cy="138" r="11" fill="#0f1117"/>
+  <circle cx="241" cy="138" r="11" fill="#0f1117"/>
+  <circle cx="271" cy="138" r="11" fill="#0f1117"/>
+  <circle cx="302" cy="138" r="11" fill="#0f1117"/>
+
+  <circle cx="210" cy="175" r="11" fill="#0f1117"/>
+  <circle cx="241" cy="175" r="11" fill="#0f1117"/>
+  <circle cx="271" cy="175" r="11" fill="#0f1117"/>
+  <circle cx="302" cy="175" r="11" fill="#0f1117"/>
+
+  <circle cx="210" cy="212" r="11" fill="#0f1117"/>
+  <circle cx="241" cy="212" r="11" fill="#0f1117"/>
+  <circle cx="271" cy="212" r="11" fill="#0f1117"/>
+  <circle cx="302" cy="212" r="11" fill="#0f1117"/>
+
+  <circle cx="210" cy="249" r="11" fill="#0f1117"/>
+  <circle cx="241" cy="249" r="11" fill="#0f1117"/>
+  <circle cx="271" cy="249" r="11" fill="#0f1117"/>
+  <circle cx="302" cy="249" r="11" fill="#0f1117"/>
+
+  <circle cx="210" cy="286" r="11" fill="#0f1117"/>
+  <circle cx="241" cy="286" r="11" fill="#0f1117"/>
+  <circle cx="271" cy="286" r="11" fill="#0f1117"/>
+  <circle cx="302" cy="286" r="11" fill="#0f1117"/>
+
+  <!--
+    AI sparkle — 4-pointed star in the top-right dark corner.
+    Center (393, 82), outer R=26, inner r=9.
+  -->
+  <path d="M419,82 L399,76 L393,56 L387,76 L367,82 L387,88 L393,108 L399,88 Z" fill="white"/>
+</svg>
