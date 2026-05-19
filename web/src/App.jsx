@@ -89,7 +89,7 @@ export default function App() {
     <div className="app-root">
       <header className="app-header">
         <h1>
-          <span className="header-icon">🎾</span>
+          <img src="/icon.svg" className="header-icon" alt="" aria-hidden="true" />
           <span className="header-accent">Padel Agent</span>
         </h1>
         <div className="header-controls">
