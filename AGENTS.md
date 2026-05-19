@@ -176,6 +176,18 @@ feature/fix/… branch
 - **Do not push directly** to `staging` or `main` — always use PRs.
 - **Merge method**: ALWAYS use **merge commit** (never squash, never rebase) when merging into `staging` or `main`. Squash commits on `staging` create diverged history that breaks the subsequent `staging` → `main` merge.
 
+### Pre-Push Checklist
+Before every `git push`, run the following and verify each item:
+
+```bash
+git status          # working tree is clean, no unexpected staged/unstaged files
+git log --oneline -5  # correct commits on the correct branch
+git diff origin/<base-branch>...HEAD -- <changed files>  # diff looks exactly as intended
+ruff check src/     # lint passes
+```
+
+Also check for **silent merge artifacts**: if you rebased onto a branch that received commits after your branch diverged, inspect the merged result of changed files — git auto-merge can silently inject lines from the other branch into your functions (e.g. a `_url_unquote` call re-appearing inside a function that no longer uses it). The CI GitHub Actions creates a synthetic merge commit, so the file it tests may differ from your local file.
+
 ### Conventional Commits
 Always use conventional commits (e.g., `feat(scope): description`, `fix:`, `docs:`, `refactor:`).
 
