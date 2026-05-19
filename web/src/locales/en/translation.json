@@ -154,7 +154,9 @@
         "expired": "Expired",
         "voters_one": "{{count}} voter",
         "voters_other": "{{count}} voters",
-        "remove": "Remove from list"
+        "remove": "Remove from list",
+        "share": "Copy link",
+        "share_copied": "Copied!"
     },
     "votePage": {
         "title": "Group Vote",

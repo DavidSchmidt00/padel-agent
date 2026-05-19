@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 
 function formatDate(iso) {
@@ -17,7 +17,15 @@ function deriveLabel(session) {
 export default function ProfilePage({ myVotes, onRemoveVote, onNavigateToVote, onNavigateToFind }) {
   const { t } = useTranslation()
   const [sessions, setSessions] = useState({})
+  const [copiedId, setCopiedId] = useState(null)
   const fetchedRef = useRef(new Set())
+
+  const handleShare = useCallback((vote_id) => {
+    const url = `${window.location.origin}/vote/${vote_id}`
+    navigator.clipboard.writeText(url).catch(() => {})
+    setCopiedId(vote_id)
+    setTimeout(() => setCopiedId((prev) => (prev === vote_id ? null : prev)), 1500)
+  }, [])
 
   useEffect(() => {
     for (const { vote_id } of myVotes) {
@@ -94,6 +102,14 @@ export default function ProfilePage({ myVotes, onRemoveVote, onNavigateToVote, o
                       {!isExpired && !isLoading && bookedCount > 0 && ' · 📌'}
                     </span>
                   </div>
+                </button>
+                <button
+                  className="my-votes-item-share"
+                  onClick={() => handleShare(vote_id)}
+                  aria-label={t('myVotes.share')}
+                  title={t('myVotes.share')}
+                >
+                  {copiedId === vote_id ? t('myVotes.share_copied') : '🔗'}
                 </button>
                 <button
                   className="my-votes-item-remove"
