@@ -88,6 +88,12 @@ export default function VotePage({ voteId, onVoteVisited }) {
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [fetchSession])
 
+  useEffect(() => {
+    if (!sessionSubmitted) return
+    const timer = setTimeout(() => setSessionSubmitted(false), 10000)
+    return () => clearTimeout(timer)
+  }, [sessionSubmitted])
+
   const fetchAvailability = useCallback(async () => {
     try {
       const res = await fetch(`/api/votes/${voteId}/availability`)
