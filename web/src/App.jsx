@@ -120,7 +120,7 @@ export default function App() {
           />
         </div>
         <div style={{ display: mode === 'vote' ? 'contents' : 'none' }}>
-          {voteId && <VotePage voteId={voteId} onVoteVisited={addVote} />}
+          {voteId && <VotePage voteId={voteId} onVoteVisited={addVote} isActive={mode === 'vote'} />}
         </div>
         <div style={{ display: mode === 'profile' ? 'contents' : 'none' }}>
           <ProfilePage
