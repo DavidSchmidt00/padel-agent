@@ -836,17 +836,12 @@ body {
   background: var(--bg-surface-raised);
   border-color: var(--error-color);
   color: var(--error-color);
-  animation: pulse 1s infinite alternate;
+  animation: confirming-pulse 1s infinite alternate;
 }
 
-@keyframes pulse {
-  from {
-    border-color: var(--error-color);
-  }
-
-  to {
-    border-color: transparent;
-  }
+@keyframes confirming-pulse {
+  from { border-color: var(--error-color); }
+  to   { border-color: transparent; }
 }
 
 .clear-chat-btn:hover {
@@ -1619,7 +1614,7 @@ body {
 }
 
 .find-slot-club {
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   color: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1632,7 +1627,7 @@ body {
 }
 
 .find-slot-price {
-  color: var(--accent);
+  color: var(--text-primary);
   font-weight: 600;
   white-space: nowrap;
 }
@@ -1705,6 +1700,7 @@ body {
   transition: background 0.12s, border-color 0.12s;
   position: relative;
   padding-left: 2.6rem;
+  border-left: 3px solid transparent;
 }
 
 .find-slot--voteable:active {
@@ -1739,7 +1735,7 @@ body {
 .find-slot-check--on {
   border-color: var(--accent);
   background: var(--accent);
-  color: #fff;
+  color: var(--text-on-accent);
 }
 
 /* ── Vote footer ── */
@@ -1865,7 +1861,6 @@ body {
   align-items: flex-start;
   gap: 10px;
   padding: 12px 14px;
-  margin-bottom: 14px;
   background: var(--accent-subtle);
   border: 1px solid rgba(34, 255, 122, 0.45);
   border-radius: var(--radius-sm);
