@@ -32,6 +32,7 @@ export default function VotePage({ voteId, onVoteVisited }) {
   const [bookingSlot, setBookingSlot] = useState(null)
   const [adminMode, setAdminMode] = useState(false)
   const [bookingError, setBookingError] = useState(null)
+  const [copiedLink, setCopiedLink] = useState(false)
   const timerRef = useRef(null)
   const availTimerRef = useRef(null)
 
@@ -41,7 +42,6 @@ export default function VotePage({ voteId, onVoteVisited }) {
       if (saved) {
         const { voterName: name, votes } = JSON.parse(saved)
         setVoterName(name)
-        setSubmittedVotes(votes)
         setPendingVotes(votes)
       }
     } catch {
@@ -214,6 +214,21 @@ export default function VotePage({ voteId, onVoteVisited }) {
               ✏️ {t('votePage.change_vote')}
             </button>
           )}
+          <button
+            className="vote-admin-toggle"
+            onClick={() => {
+              const url = `${window.location.origin}/vote/${voteId}`
+              navigator.clipboard.writeText(url).catch(() => {})
+              setCopiedLink(true)
+              setTimeout(() => setCopiedLink(false), 1500)
+            }}
+            aria-label={t('votePage.share')}
+          >
+            <span aria-hidden="true">{copiedLink ? '✓' : '🔗'}</span>
+            <span className="vote-admin-label">
+              {copiedLink ? t('votePage.share_copied') : t('votePage.share')}
+            </span>
+          </button>
           <button
             className={`vote-admin-toggle${adminMode ? ' vote-admin-toggle--active' : ''}`}
             onClick={() => setAdminMode(m => !m)}
