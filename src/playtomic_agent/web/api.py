@@ -11,7 +11,6 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Literal
 from urllib.parse import parse_qs
-from urllib.parse import unquote as _url_unquote
 from urllib.parse import urlparse as _urlparse
 from zoneinfo import ZoneInfo
 
@@ -681,7 +680,6 @@ async def get_vote_availability(vote_id: str, request: Request):
     return {"availability": availability}
 
 
-
 class _BookSlotRequest(BaseModel):
     slot_id: str
 
@@ -689,7 +687,6 @@ class _BookSlotRequest(BaseModel):
 @app.post("/api/votes/{vote_id}/book", status_code=200)
 async def mark_slot_booked(vote_id: str, req: _BookSlotRequest):
     """Mark a slot as booked by the group. Visible to everyone with the link."""
-    slot_id = _url_unquote(slot_id)
     store = _get_vote_store()
     session = store.get(vote_id)
     if session is None:
@@ -705,7 +702,6 @@ async def mark_slot_booked(vote_id: str, req: _BookSlotRequest):
 @app.delete("/api/votes/{vote_id}/book", status_code=200)
 async def unmark_slot_booked(vote_id: str, req: _BookSlotRequest):
     """Remove the booked flag from a slot (organiser undo)."""
-    slot_id = _url_unquote(slot_id)
     store = _get_vote_store()
     session = store.get(vote_id)
     if session is None:
