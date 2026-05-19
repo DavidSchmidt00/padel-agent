@@ -2,19 +2,34 @@ import { Resvg } from '@resvg/resvg-js'
 import { readFileSync, writeFileSync } from 'fs'
 
 // ── Maskable icon SVG ────────────────────────────────────────────────────────
-// Full-bleed background (no rx), racket upright and scaled to ~60% so the
-// entire shape sits well within the central 80% safe zone.
-// No sparkle — corners are always clipped by the OS mask.
+// Full-bleed background, racket at 62% scale + 12° tilt so everything stays
+// well inside the 80% safe zone. Sparkle repositioned to (325,138) — computed
+// from where the top-right of the tilted head lands after both transforms,
+// confirmed within the safe zone. Radial glow adds depth behind the racket.
 const maskableSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
     <linearGradient id="grad" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
       <stop offset="0%" stop-color="#22ff7a"/>
       <stop offset="100%" stop-color="#00d4ff"/>
     </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="48%" r="44%">
+      <stop offset="0%" stop-color="#22ff7a" stop-opacity="0.14"/>
+      <stop offset="100%" stop-color="#22ff7a" stop-opacity="0"/>
+    </radialGradient>
   </defs>
+
+  <!-- Full-bleed background -->
   <rect width="512" height="512" fill="#0f1117"/>
-  <!-- Racket group scaled to 62% and centred so it fits inside the safe zone -->
-  <g transform="translate(256,262) scale(0.62) translate(-256,-262)">
+
+  <!-- Soft green glow behind the racket -->
+  <rect width="512" height="512" fill="url(#glow)"/>
+
+  <!--
+    Racket: scaled to 62% around the visual centroid (256,262),
+    then rotated –12° around the same point.
+    Bounding box after both transforms stays within the 80% safe zone.
+  -->
+  <g transform="rotate(-12,256,262) translate(256,262) scale(0.62) translate(-256,-262)">
     <path
       d="M 194,303 A 125,125 0 1 1 318,303 L 281,326 L 281,450 A 25,25 0 0 1 231,450 L 231,326 Z"
       fill="url(#grad)"
@@ -44,6 +59,17 @@ const maskableSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 51
     <rect x="231" y="390" width="50" height="5" rx="2" fill="#0f1117" opacity="0.45"/>
     <rect x="231" y="410" width="50" height="5" rx="2" fill="#0f1117" opacity="0.45"/>
   </g>
+
+  <!--
+    AI sparkle — outside the rotated racket group so it doesn't inherit
+    the transform. Positioned at (325,138): top-right of the tilted head
+    after scale+rotate, confirmed well inside the 80% safe zone.
+    Center (325,138), outer R=18, inner r=7.
+  -->
+  <path
+    d="M343,138 L330,133 L325,120 L320,133 L307,138 L320,143 L325,156 L330,143 Z"
+    fill="white"
+  />
 </svg>`
 
 const pub = 'public'
