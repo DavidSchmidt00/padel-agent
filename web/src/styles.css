@@ -186,7 +186,10 @@ body {
 }
 
 .header-icon {
-  font-size: 1.5rem;
+  height: 2rem;
+  width: 2rem;
+  display: block;
+  flex-shrink: 0;
 }
 
 .header-accent {
@@ -1022,7 +1025,8 @@ body {
   }
 
   .header-icon {
-    font-size: 1.25rem;
+    height: 1.75rem;
+    width: 1.75rem;
   }
 
   .header-controls {
@@ -2808,10 +2812,13 @@ body {
 }
 
 .about-hero-icon {
-  font-size: 4rem;
   margin-bottom: 0.75rem;
   display: block;
   filter: drop-shadow(0 0 24px rgba(34, 255, 122, 0.35));
+}
+.about-hero-icon img {
+  width: 96px;
+  height: 96px;
 }
 
 .about-hero-title {
