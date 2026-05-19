@@ -146,7 +146,7 @@ export default function VotePage({ voteId, onVoteVisited }) {
     setBookingSlot(slotId)
     setBookingError(null)
     try {
-      const res = await fetch(`/api/votes/${voteId}/slots/${slotId}/book`, { method: 'POST' })
+      const res = await fetch(`/api/votes/${voteId}/slots/${encodeURIComponent(slotId)}/book`, { method: 'POST' })
       if (!res.ok) { setBookingError(t('votePage.booking_error')); return }
       const data = await res.json()
       setBookedSlots(new Set(data.booked_slots ?? []))
@@ -162,7 +162,7 @@ export default function VotePage({ voteId, onVoteVisited }) {
     setBookingSlot(slotId)
     setBookingError(null)
     try {
-      const res = await fetch(`/api/votes/${voteId}/slots/${slotId}/book`, { method: 'DELETE' })
+      const res = await fetch(`/api/votes/${voteId}/slots/${encodeURIComponent(slotId)}/book`, { method: 'DELETE' })
       if (!res.ok) { setBookingError(t('votePage.booking_error')); return }
       const data = await res.json()
       setBookedSlots(new Set(data.booked_slots ?? []))
