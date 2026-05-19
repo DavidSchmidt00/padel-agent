@@ -80,7 +80,6 @@ export default function ProfilePage({ myVotes, onRemoveVote, onNavigateToVote, o
             const isLoading = session === undefined
             const label = storedLabel || (!isExpired && !isLoading && session ? deriveLabel(session) : null)
             const voterCount = session && !isExpired ? session.voter_count : null
-            const bookedCount = session && !isExpired ? (session.booked_slots || []).length : 0
 
             return (
               <div key={vote_id} className={`my-votes-item${isExpired ? ' my-votes-item--expired' : ''}`}>
@@ -99,7 +98,6 @@ export default function ProfilePage({ myVotes, onRemoveVote, onNavigateToVote, o
                     <span className={`my-votes-item-sub${isExpired ? ' my-votes-item-sub--expired' : ''}`}>
                       {isExpired && t('myVotes.expired')}
                       {!isExpired && !isLoading && voterCount != null && t('myVotes.voters', { count: voterCount })}
-                      {!isExpired && !isLoading && bookedCount > 0 && ' · 📌'}
                     </span>
                   </div>
                 </button>
