@@ -25,6 +25,7 @@ export default function VotePage({ voteId, onVoteVisited }) {
   const [voterName, setVoterName] = useState('')
   const [pendingVotes, setPendingVotes] = useState({})
   const [submittedVotes, setSubmittedVotes] = useState(null)
+  const [sessionSubmitted, setSessionSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(null)
   const [availability, setAvailability] = useState({})
@@ -42,6 +43,7 @@ export default function VotePage({ voteId, onVoteVisited }) {
       if (saved) {
         const { voterName: name, votes } = JSON.parse(saved)
         setVoterName(name)
+        setSubmittedVotes(votes)
         setPendingVotes(votes)
       }
     } catch {
@@ -132,6 +134,7 @@ export default function VotePage({ voteId, onVoteVisited }) {
         : prev)
       const saved = { ...pendingVotes }
       setSubmittedVotes(saved)
+      setSessionSubmitted(true)
       try {
         localStorage.setItem(LS_KEY(voteId), JSON.stringify({ voterName: voterName.trim(), votes: saved }))
       } catch {
@@ -188,6 +191,7 @@ export default function VotePage({ voteId, onVoteVisited }) {
   function handleChangeVote() {
     setPendingVotes({ ...submittedVotes })
     setSubmittedVotes(null)
+    setSessionSubmitted(false)
     setSubmitError(null)
   }
 
@@ -410,9 +414,9 @@ export default function VotePage({ voteId, onVoteVisited }) {
               {submitting ? t('votePage.submitting') : t('votePage.submit_btn')}
             </button>
           </>
-        ) : (
+        ) : sessionSubmitted ? (
           <span className="vote-submitted-label">✓ {t('votePage.submitted_label')}</span>
-        )}
+        ) : null}
       </div>
     </div>
   )
