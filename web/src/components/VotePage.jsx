@@ -217,20 +217,6 @@ export default function VotePage({ voteId, onVoteVisited }) {
         </div>
       </div>
 
-      {/* Name input */}
-      {submittedVotes === null && (
-        <div className="find-field" style={{ marginBottom: '14px' }}>
-          <label>{t('votePage.your_name')}</label>
-          <input
-            type="text"
-            value={voterName}
-            onChange={e => setVoterName(e.target.value)}
-            placeholder={t('votePage.name_placeholder')}
-            maxLength={40}
-          />
-        </div>
-      )}
-
       {/* Who has voted */}
       {session?.voters?.length > 0 ? (
         <p className="vote-voters-line">
@@ -369,32 +355,42 @@ export default function VotePage({ voteId, onVoteVisited }) {
       </div>
 
       {/* Unvoted hint */}
-      {submittedVotes === null && voterName.trim() && unvotedCount > 0 && (
+      {submittedVotes === null && unvotedCount > 0 && (
         <p className="vote-unvoted-hint">
           {t('votePage.unvoted_hint', { count: unvotedCount })}
         </p>
       )}
 
       {/* Submit / status */}
-      <div className="vote-submit-row">
-        {submittedVotes === null ? (
-          <button
-            className="find-submit"
-            style={{ margin: 0, opacity: !voterName.trim() ? 0.5 : 1 }}
-            disabled={!voterName.trim() || submitting}
-            onClick={handleSubmitVotes}
-          >
-            {submitting ? t('votePage.submitting') : t('votePage.submit_btn')}
-          </button>
-        ) : (
-          <span className="vote-submitted-label">{t('votePage.submitted_label')}</span>
-        )}
-      </div>
+      <p className="vote-expires-note">{t('votePage.expires_note')}</p>
 
       {submitError && <p className="vote-error-msg">{submitError}</p>}
       {bookingError && <p className="vote-error-msg">{bookingError}</p>}
 
-      <p className="vote-expires-note">{t('votePage.expires_note')}</p>
+      <div className="vote-submit-row">
+        {submittedVotes === null ? (
+          <>
+            <div className="vote-name-field">
+              <input
+                type="text"
+                value={voterName}
+                onChange={e => setVoterName(e.target.value)}
+                placeholder={t('votePage.name_placeholder')}
+                maxLength={40}
+              />
+            </div>
+            <button
+              className="vote-submit-btn"
+              disabled={!voterName.trim() || submitting}
+              onClick={handleSubmitVotes}
+            >
+              {submitting ? t('votePage.submitting') : t('votePage.submit_btn')}
+            </button>
+          </>
+        ) : (
+          <span className="vote-submitted-label">✓ {t('votePage.submitted_label')}</span>
+        )}
+      </div>
     </div>
   )
 }
