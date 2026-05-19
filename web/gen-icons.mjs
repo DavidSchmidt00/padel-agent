@@ -72,11 +72,25 @@ const maskableSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 51
   />
 </svg>`
 
+// ── Monochrome icon SVG ──────────────────────────────────────────────────────
+// Single white silhouette on transparent background. Android 12+ Material You
+// ignores the fill colour and applies the user's wallpaper accent instead.
+// Same tilt as the main icon for consistency.
+const monochromeSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <g transform="rotate(-15, 256, 268)">
+    <path
+      d="M 194,303 A 125,125 0 1 1 318,303 L 281,326 L 281,450 A 25,25 0 0 1 231,450 L 231,326 Z"
+      fill="white"
+    />
+  </g>
+</svg>`
+
 const pub = 'public'
 const tasks = [
-  { file: 'android-icon-192x192.png', svg: maskableSvg,                              size: 192 },
-  { file: 'apple-icon-180x180.png',   svg: readFileSync(`${pub}/icon.svg`, 'utf8'),   size: 180 },
-  { file: 'favicon-32x32.png',        svg: readFileSync(`${pub}/icon.svg`, 'utf8'),   size: 32  },
+  { file: 'android-icon-192x192.png',    svg: maskableSvg,                              size: 192 },
+  { file: 'icon-monochrome-192x192.png', svg: monochromeSvg,                            size: 192 },
+  { file: 'apple-icon-180x180.png',      svg: readFileSync(`${pub}/icon.svg`, 'utf8'),   size: 180 },
+  { file: 'favicon-32x32.png',           svg: readFileSync(`${pub}/icon.svg`, 'utf8'),   size: 32  },
 ]
 
 for (const { file, svg, size } of tasks) {

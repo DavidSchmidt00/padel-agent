@@ -1,33 +1,37 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <!--
-      userSpaceOnUse so frame ring and look-through holes share the same
-      gradient coordinate space (top-left = green, bottom-right = cyan).
-    -->
     <linearGradient id="grad" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#22ff7a"/>
-      <stop offset="100%" stop-color="#00d4ff"/>
+      <stop class="gs" offset="0%"   stop-color="#22ff7a"/>
+      <stop class="ge" offset="100%" stop-color="#00d4ff"/>
     </linearGradient>
+    <style>
+      /*
+        Light-mode overrides.
+        stop-color, fill, and similar presentation attributes can be overridden
+        by CSS — this is how SVG favicons get native theme switching in
+        Chrome, Firefox, and Edge without any JavaScript.
+      */
+      .bg   { fill: #0f1117; }
+      .face { fill: #091510; }
+      .grip { fill: #0f1117; }
+      .spark { fill: #ffffff; }
+      .gs   { stop-color: #22ff7a; }
+      .ge   { stop-color: #00d4ff; }
+
+      @media (prefers-color-scheme: light) {
+        .bg   { fill: #ffffff; }
+        .face { fill: #f0fdf4; }
+        .grip { fill: #ffffff; }
+        .spark { fill: #0f1117; }
+        .gs   { stop-color: #16a34a; }
+        .ge   { stop-color: #0891b2; }
+      }
+    </style>
   </defs>
 
-  <!-- App icon background -->
-  <rect width="512" height="512" rx="108" fill="#0f1117"/>
+  <rect class="bg" width="512" height="512" rx="108"/>
 
-  <!--
-    Racket group — rotated –15° (counterclockwise) around the visual
-    centroid of the racket so the head tilts upper-left, handle lower-right.
-    All racket elements are inside this group; the AI sparkle is NOT
-    so it stays fixed in the corner.
-  -->
   <g transform="rotate(-15, 256, 268)">
-
-    <!--
-      Racket silhouette.
-      Head circle: center (256, 195) r=125.
-      Arc end-points at 240° and 300° (standard math, from center):
-        left (194, 303)  right (318, 303).
-      Large clockwise arc = head; two shoulder lines taper to the handle.
-    -->
     <path
       d="M 194,303
          A 125,125 0 1 1 318,303
@@ -37,56 +41,36 @@
       fill="url(#grad)"
     />
 
-    <!-- Dark face: creates the visible frame ring (ring = gradient – face) -->
-    <circle cx="256" cy="195" r="100" fill="#091510"/>
+    <circle class="face" cx="256" cy="195" r="100"/>
 
-    <!--
-      Holes: hexagonal packing, diamond arrangement.
-      Rows from top to bottom, each row offset by half a column step (20 px).
-      Column step = 40 px. Hole radius = 11.
-      Shape: 3 → 4 → 5 → 4 → 3 holes = 19 total.
-      All centers verified within r ≈ 85 of face centre.
-    -->
-    <!-- Row 1  y=120  (3 holes, even columns) -->
+    <!-- Holes: hex diamond pattern 3-4-5-4-3 -->
     <circle cx="216" cy="120" r="11" fill="url(#grad)"/>
     <circle cx="256" cy="120" r="11" fill="url(#grad)"/>
     <circle cx="296" cy="120" r="11" fill="url(#grad)"/>
-    <!-- Row 2  y=153  (4 holes, odd offset +20) -->
     <circle cx="196" cy="153" r="11" fill="url(#grad)"/>
     <circle cx="236" cy="153" r="11" fill="url(#grad)"/>
     <circle cx="276" cy="153" r="11" fill="url(#grad)"/>
     <circle cx="316" cy="153" r="11" fill="url(#grad)"/>
-    <!-- Row 3  y=186  (5 holes, even columns — widest row) -->
     <circle cx="176" cy="186" r="11" fill="url(#grad)"/>
     <circle cx="216" cy="186" r="11" fill="url(#grad)"/>
     <circle cx="256" cy="186" r="11" fill="url(#grad)"/>
     <circle cx="296" cy="186" r="11" fill="url(#grad)"/>
     <circle cx="336" cy="186" r="11" fill="url(#grad)"/>
-    <!-- Row 4  y=219  (4 holes, odd offset) -->
     <circle cx="196" cy="219" r="11" fill="url(#grad)"/>
     <circle cx="236" cy="219" r="11" fill="url(#grad)"/>
     <circle cx="276" cy="219" r="11" fill="url(#grad)"/>
     <circle cx="316" cy="219" r="11" fill="url(#grad)"/>
-    <!-- Row 5  y=252  (3 holes, even) -->
     <circle cx="216" cy="252" r="11" fill="url(#grad)"/>
     <circle cx="256" cy="252" r="11" fill="url(#grad)"/>
     <circle cx="296" cy="252" r="11" fill="url(#grad)"/>
 
-    <!-- Handle grip bands — subtle tape-wrap suggestion -->
-    <rect x="231" y="350" width="50" height="5" rx="2" fill="#0f1117" opacity="0.45"/>
-    <rect x="231" y="370" width="50" height="5" rx="2" fill="#0f1117" opacity="0.45"/>
-    <rect x="231" y="390" width="50" height="5" rx="2" fill="#0f1117" opacity="0.45"/>
-    <rect x="231" y="410" width="50" height="5" rx="2" fill="#0f1117" opacity="0.45"/>
-
+    <rect class="grip" x="231" y="350" width="50" height="5" rx="2" opacity="0.45"/>
+    <rect class="grip" x="231" y="370" width="50" height="5" rx="2" opacity="0.45"/>
+    <rect class="grip" x="231" y="390" width="50" height="5" rx="2" opacity="0.45"/>
+    <rect class="grip" x="231" y="410" width="50" height="5" rx="2" opacity="0.45"/>
   </g>
 
-  <!--
-    AI sparkle — 4-pointed star, fixed in the upper-right dark corner.
-    Does NOT rotate with the racket. Sits just outside the tilted head's
-    top-right edge. Center (392, 82), outer R=24, inner r=9.
-  -->
-  <path
+  <path class="spark"
     d="M416,82 L398,76 L392,58 L386,76 L368,82 L386,88 L392,106 L398,88 Z"
-    fill="white"
   />
 </svg>

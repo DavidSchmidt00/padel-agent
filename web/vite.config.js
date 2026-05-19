@@ -36,6 +36,12 @@ export default defineConfig({
             type: 'image/svg+xml',
             purpose: 'any',
           },
+          {
+            src: 'icon-monochrome-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'monochrome',
+          },
         ],
       },
       workbox: {
