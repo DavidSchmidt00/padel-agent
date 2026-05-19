@@ -376,25 +376,24 @@ export default function VotePage({ voteId, onVoteVisited }) {
       )}
 
       {/* Submit / status */}
+      <p className="vote-expires-note">{t('votePage.expires_note')}</p>
+
+      {submitError && <p className="vote-error-msg">{submitError}</p>}
+      {bookingError && <p className="vote-error-msg">{bookingError}</p>}
+
       <div className="vote-submit-row">
         {submittedVotes === null ? (
           <button
-            className="find-submit"
-            style={{ margin: 0, opacity: !voterName.trim() ? 0.5 : 1 }}
+            className="vote-submit-btn"
             disabled={!voterName.trim() || submitting}
             onClick={handleSubmitVotes}
           >
             {submitting ? t('votePage.submitting') : t('votePage.submit_btn')}
           </button>
         ) : (
-          <span className="vote-submitted-label">{t('votePage.submitted_label')}</span>
+          <span className="vote-submitted-label">✓ {t('votePage.submitted_label')}</span>
         )}
       </div>
-
-      {submitError && <p className="vote-error-msg">{submitError}</p>}
-      {bookingError && <p className="vote-error-msg">{bookingError}</p>}
-
-      <p className="vote-expires-note">{t('votePage.expires_note')}</p>
     </div>
   )
 }

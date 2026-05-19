@@ -452,7 +452,7 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
                     type="button"
                     onClick={() => { setDateFrom(today); setDateTo(end) }}
                     className="suggestion-chip"
-                    style={active ? { background: 'var(--accent-subtle)', borderColor: 'rgba(6,182,212,0.4)', color: 'var(--accent)' } : {}}
+                    style={active ? { background: 'var(--accent-subtle)', borderColor: 'rgba(34,255,122,0.4)', color: 'var(--accent)' } : {}}
                   >
                     {label}
                   </button>
