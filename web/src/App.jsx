@@ -79,6 +79,14 @@ export default function App() {
     setMode('about')
   }
 
+  function navigateToHome() {
+    try {
+      const last = localStorage.getItem(LAST_ROUTE_KEY)
+      if (last === 'chat' || last === 'find') return navigateTo(last)
+    } catch { /* ignore */ }
+    navigateTo('chat')
+  }
+
   function navigateToVote(vote_id) {
     history.pushState(null, '', `/vote/${vote_id}`)
     setVoteId(vote_id)
@@ -89,8 +97,10 @@ export default function App() {
     <div className="app-root">
       <header className="app-header">
         <h1>
-          <img src="/icon.svg" className="header-icon" alt="" aria-hidden="true" />
-          <span className="header-accent">Padel Agent</span>
+          <button className="header-home-btn" onClick={navigateToHome} aria-label="Home">
+            <img src="/icon.svg" className="header-icon" alt="" aria-hidden="true" />
+            <span className="header-accent">Padel Agent</span>
+          </button>
         </h1>
         <div className="header-controls">
           <SettingsMenu

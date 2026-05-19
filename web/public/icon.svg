@@ -70,7 +70,8 @@
     <rect class="grip" x="231" y="410" width="50" height="5" rx="2" opacity="0.45"/>
   </g>
 
-  <path class="spark"
-    d="M416,82 L398,76 L392,58 L386,76 L368,82 L386,88 L392,106 L398,88 Z"
-  />
+  <!-- Three AI sparkle stars (large, medium, small) -->
+  <path class="spark" d="M413,90 L398,85 L393,70 L388,85 L373,90 L388,95 L393,110 L398,95 Z"/>
+  <path class="spark" d="M384,62 L375,59 L372,50 L369,59 L360,62 L369,65 L372,74 L375,65 Z"/>
+  <path class="spark" d="M420,60 L414,58 L412,52 L410,58 L404,60 L410,62 L412,68 L414,62 Z"/>
 </svg>

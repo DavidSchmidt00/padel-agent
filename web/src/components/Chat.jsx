@@ -404,7 +404,7 @@ const Chat = forwardRef(({ region, onHandoffToFind }, ref) => {
 
           {messages.length === 0 && (
             <div className="empty">
-              <span className="empty-icon">🎾</span>
+              <img src="/icon.svg" className="empty-icon" alt="" aria-hidden="true" />
               <p>{t('empty_state')}</p>
             </div>
           )}

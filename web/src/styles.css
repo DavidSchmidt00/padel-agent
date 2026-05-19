@@ -185,6 +185,19 @@ body {
   gap: 0.6rem;
 }
 
+.header-home-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+}
+
 .header-icon {
   height: 2rem;
   width: 2rem;
@@ -708,7 +721,8 @@ body {
 }
 
 .empty-icon {
-  font-size: 2.5rem;
+  width: 3rem;
+  height: 3rem;
   margin-bottom: 0.75rem;
   display: block;
 }
@@ -1115,7 +1129,8 @@ body {
   }
 
   .empty-icon {
-    font-size: 2rem;
+    width: 2.5rem;
+    height: 2.5rem;
   }
 
   /* ─── Profile Suggestion (keep row, allow wrap) ─── */

@@ -61,15 +61,13 @@ const maskableSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 51
   </g>
 
   <!--
-    AI sparkle — outside the rotated racket group so it doesn't inherit
-    the transform. Positioned at (325,138): top-right of the tilted head
-    after scale+rotate, confirmed well inside the 80% safe zone.
-    Center (325,138), outer R=18, inner r=7.
+    Three AI sparkle stars — outside the rotated racket group.
+    Scaled ~60% relative to the full icon stars (outer radii 12, 7, 5).
+    All positions confirmed within the 80% safe zone.
   -->
-  <path
-    d="M343,138 L330,133 L325,120 L320,133 L307,138 L320,143 L325,156 L330,143 Z"
-    fill="white"
-  />
+  <path d="M337,138 L325,134 L321,122 L317,134 L305,138 L317,142 L321,154 L325,142 Z" fill="white"/>
+  <path d="M316,116 L309,114 L307,107 L305,114 L298,116 L305,118 L307,125 L309,118 Z" fill="white"/>
+  <path d="M346,114 L341,112 L339,107 L337,112 L332,114 L337,116 L339,121 L341,116 Z" fill="white"/>
 </svg>`
 
 // ── Monochrome icon SVG ──────────────────────────────────────────────────────
