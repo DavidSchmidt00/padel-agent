@@ -3179,6 +3179,27 @@ body {
   background: rgba(248, 113, 113, 0.08);
 }
 
+.my-votes-item-share {
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0.5rem 0.65rem;
+  cursor: pointer;
+  border-radius: calc(var(--radius-md) - 2px);
+  transition: color var(--transition-speed), background var(--transition-speed);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.my-votes-item-share:hover {
+  color: var(--accent);
+  background: rgba(34, 255, 122, 0.08);
+}
+
 /* ═══════════════════════════════════════════════════════
    Bottom Navigation Bar
    ═══════════════════════════════════════════════════════ */

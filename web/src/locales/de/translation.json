@@ -154,7 +154,9 @@
         "expired": "Abgelaufen",
         "voters_one": "{{count}} Teilnehmer",
         "voters_other": "{{count}} Teilnehmer",
-        "remove": "Aus Liste entfernen"
+        "remove": "Aus Liste entfernen",
+        "share": "Link kopieren",
+        "share_copied": "Kopiert!"
     },
     "votePage": {
         "title": "Gruppenabstimmung",
