@@ -217,20 +217,6 @@ export default function VotePage({ voteId, onVoteVisited }) {
         </div>
       </div>
 
-      {/* Name input */}
-      {submittedVotes === null && (
-        <div className="find-field" style={{ marginBottom: '14px' }}>
-          <label>{t('votePage.your_name')}</label>
-          <input
-            type="text"
-            value={voterName}
-            onChange={e => setVoterName(e.target.value)}
-            placeholder={t('votePage.name_placeholder')}
-            maxLength={40}
-          />
-        </div>
-      )}
-
       {/* Who has voted */}
       {session?.voters?.length > 0 ? (
         <p className="vote-voters-line">
@@ -383,13 +369,24 @@ export default function VotePage({ voteId, onVoteVisited }) {
 
       <div className="vote-submit-row">
         {submittedVotes === null ? (
-          <button
-            className="vote-submit-btn"
-            disabled={!voterName.trim() || submitting}
-            onClick={handleSubmitVotes}
-          >
-            {submitting ? t('votePage.submitting') : t('votePage.submit_btn')}
-          </button>
+          <>
+            <div className="vote-name-field">
+              <input
+                type="text"
+                value={voterName}
+                onChange={e => setVoterName(e.target.value)}
+                placeholder={t('votePage.name_placeholder')}
+                maxLength={40}
+              />
+            </div>
+            <button
+              className="vote-submit-btn"
+              disabled={!voterName.trim() || submitting}
+              onClick={handleSubmitVotes}
+            >
+              {submitting ? t('votePage.submitting') : t('votePage.submit_btn')}
+            </button>
+          </>
         ) : (
           <span className="vote-submitted-label">✓ {t('votePage.submitted_label')}</span>
         )}

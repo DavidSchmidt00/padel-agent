@@ -46,7 +46,14 @@ export default function ProfilePage({ myVotes, onRemoveVote, onNavigateToVote, o
       </div>
 
       {/* My Votes */}
-      <h2 className="my-votes-heading">{t('myVotes.title')}</h2>
+      <div className="my-votes-heading-row">
+        <h2 className="my-votes-heading">{t('myVotes.title')}</h2>
+        {myVotes.length > 0 && (
+          <button className="my-votes-find-btn" onClick={onNavigateToFind}>
+            🔍
+          </button>
+        )}
+      </div>
 
       {myVotes.length === 0 ? (
         <div className="my-votes-empty">
