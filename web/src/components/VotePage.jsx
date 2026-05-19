@@ -17,7 +17,7 @@ function threshold(courtType) {
 
 const LS_KEY = (voteId) => `vote-${voteId}`
 
-export default function VotePage({ voteId, onVoteVisited }) {
+export default function VotePage({ voteId, onVoteVisited, isActive }) {
   const { t, i18n } = useTranslation()
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -93,6 +93,10 @@ export default function VotePage({ voteId, onVoteVisited }) {
     const timer = setTimeout(() => setSessionSubmitted(false), 10000)
     return () => clearTimeout(timer)
   }, [sessionSubmitted])
+
+  useEffect(() => {
+    if (!isActive) setSessionSubmitted(false)
+  }, [isActive])
 
   const fetchAvailability = useCallback(async () => {
     try {
