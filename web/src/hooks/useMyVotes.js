@@ -27,9 +27,13 @@ export default function useMyVotes() {
 
   const addVote = useCallback((vote_id, label) => {
     setVotes((prev) => {
+      const existing = prev.find((v) => v.vote_id === vote_id)
       const filtered = prev.filter((v) => v.vote_id !== vote_id)
       const entry = { vote_id, saved_at: new Date().toISOString() }
-      if (label) entry.label = label
+      // Preserve the richer label set at creation time (e.g. "Club · 19.05")
+      // rather than overwriting it with the shorter date-only label from VotePage.
+      const resolvedLabel = existing?.label || label
+      if (resolvedLabel) entry.label = resolvedLabel
       const next = [entry, ...filtered].slice(0, MAX_VOTES)
       persist(next)
       return next
