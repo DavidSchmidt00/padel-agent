@@ -355,7 +355,7 @@ export default function VotePage({ voteId, onVoteVisited }) {
       </div>
 
       {/* Unvoted hint */}
-      {submittedVotes === null && voterName.trim() && unvotedCount > 0 && (
+      {submittedVotes === null && unvotedCount > 0 && (
         <p className="vote-unvoted-hint">
           {t('votePage.unvoted_hint', { count: unvotedCount })}
         </p>

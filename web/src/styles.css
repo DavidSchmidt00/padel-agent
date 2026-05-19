@@ -2534,6 +2534,12 @@ body {
   cursor: pointer;
   color: var(--text-primary);
   padding-right: 2px;
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: inherit;
+  padding: 0 2px 0 0;
+  line-height: 1;
 }
 
 /* Preset pills reuse .find-club-chip — extra row wrapper */
