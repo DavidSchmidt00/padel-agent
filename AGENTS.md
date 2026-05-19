@@ -174,6 +174,7 @@ feature/fix/… branch
 - **Staging**: merge feature branches → `staging` via PR. CI must be green. Triggers auto-deploy to Railway `test`.
 - **Production**: merge `staging` → `main` via PR. Requires CI + manual approval of the GitHub `production` environment. Only then does Railway `production` get deployed.
 - **Do not push directly** to `staging` or `main` — always use PRs.
+- **Merge method**: ALWAYS use **merge commit** (never squash, never rebase) when merging into `staging` or `main`. Squash commits on `staging` create diverged history that breaks the subsequent `staging` → `main` merge.
 
 ### Conventional Commits
 Always use conventional commits (e.g., `feat(scope): description`, `fix:`, `docs:`, `refactor:`).
