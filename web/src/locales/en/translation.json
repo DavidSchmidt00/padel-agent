@@ -143,6 +143,9 @@
     "chat": {
         "open_in_find_mode": "Open in Find Mode"
     },
+    "nav": {
+        "profile": "Profile"
+    },
     "myVotes": {
         "title": "My Votes",
         "empty_title": "No votes yet",

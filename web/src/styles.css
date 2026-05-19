@@ -119,8 +119,7 @@ body {
   width: 100%;
   height: 100%;
   display: grid;
-  grid-template-rows: auto 1fr;
-  /* Header takes content size, main takes rest */
+  grid-template-rows: auto 1fr auto;
   overflow: hidden;
 }
 
@@ -154,7 +153,7 @@ body {
   margin: 0 auto;
   padding: 1.75rem 1.5rem 0.5rem;
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: 1fr auto;
   align-items: center;
 }
 
@@ -399,35 +398,6 @@ body {
 .settings-theme-label {
   font-size: 0.82rem;
   color: var(--text-secondary);
-}
-
-/* Account row */
-.settings-account-row {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  opacity: 0.45;
-}
-.settings-account-avatar {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: var(--bg-input);
-  border: 1.5px solid var(--border-input);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.9rem;
-  flex-shrink: 0;
-}
-.settings-account-name {
-  font-size: 0.85rem;
-  color: var(--text-primary);
-  font-weight: 500;
-}
-.settings-account-sub {
-  font-size: 0.72rem;
-  color: var(--text-muted);
 }
 
 /* Link rows */
@@ -2975,6 +2945,24 @@ body {
   max-width: 280px;
 }
 
+.my-votes-empty-cta {
+  margin-top: 0.5rem;
+  padding: 0.55rem 1.25rem;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background var(--transition-speed), color var(--transition-speed);
+}
+
+.my-votes-empty-cta:hover {
+  background: var(--accent-subtle);
+}
+
 .my-votes-list {
   display: flex;
   flex-direction: column;
@@ -3078,4 +3066,83 @@ body {
 .my-votes-item-remove:hover {
   color: var(--error-color);
   background: rgba(248, 113, 113, 0.08);
+}
+
+/* ═══════════════════════════════════════════════════════
+   Bottom Navigation Bar
+   ═══════════════════════════════════════════════════════ */
+.bottom-nav {
+  width: 100%;
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  align-items: stretch;
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 50;
+}
+
+.bottom-nav-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0.75rem 0;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-family: inherit;
+  cursor: pointer;
+  transition: color var(--transition-speed);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bottom-nav-btn:hover {
+  color: var(--text-primary);
+}
+
+.bottom-nav-btn.active {
+  color: var(--accent);
+}
+
+.bottom-nav-icon {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.bottom-nav-label {
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* ═══════════════════════════════════════════════════════
+   Profile Page
+   ═══════════════════════════════════════════════════════ */
+.profile-account {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.75rem 0 1.25rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.profile-account-avatar {
+  font-size: 2rem;
+  line-height: 1;
+  opacity: 0.7;
+}
+
+.profile-account-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.profile-account-sub {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 0.15rem;
 }

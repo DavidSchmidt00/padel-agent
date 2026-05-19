@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { REGIONS } from '../regions'
 
-export default function SettingsMenu({ region, onRegionChange, theme, onThemeToggle, onNavigateAbout, onNavigateMyVotes }) {
+export default function SettingsMenu({ region, onRegionChange, theme, onThemeToggle, onNavigateAbout }) {
     const { t } = useTranslation()
     const [open, setOpen] = useState(false)
     const [regionOpen, setRegionOpen] = useState(false)
@@ -86,26 +86,8 @@ export default function SettingsMenu({ region, onRegionChange, theme, onThemeTog
                         </div>
                     </div>
 
-                    {/* ── Account ── */}
-                    <div className="settings-section">
-                        <div className="settings-section-label">{t('settings.account')}</div>
-                        <div className="settings-account-row">
-                            <div className="settings-account-avatar">👤</div>
-                            <div>
-                                <div className="settings-account-name">{t('settings.guest')}</div>
-                                <div className="settings-account-sub">{t('settings.sign_in_soon')}</div>
-                            </div>
-                        </div>
-                    </div>
-
                     {/* ── Links ── */}
                     <div className="settings-section">
-                        <button
-                          className="settings-link-row"
-                          onClick={() => { onNavigateMyVotes(); setOpen(false) }}
-                        >
-                          🗳️ {t('myVotes.title')}
-                        </button>
                         <button
                           className="settings-link-row"
                           onClick={() => { onNavigateAbout(); setOpen(false) }}
