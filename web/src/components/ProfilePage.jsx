@@ -109,7 +109,7 @@ export default function ProfilePage({ myVotes, onRemoveVote, onNavigateToVote, o
                   aria-label={t('myVotes.share')}
                   title={t('myVotes.share')}
                 >
-                  {copiedId === vote_id ? '✓' : '🔗'}
+                  {copiedId === vote_id ? t('myVotes.share_copied') : '🔗'}
                 </button>
                 <button
                   className="my-votes-item-remove"
