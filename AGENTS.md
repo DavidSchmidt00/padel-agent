@@ -209,5 +209,11 @@ Railway deploys per nativer GitHub-Integration (kein Token nötig):
 
 ## Documentation
 
-- **Keep it Current**: Update `README.md` and `AGENTS.md` after every major change.
-- **Completeness**: Ensure new features (Tools, CLI commands, API endpoints) are documented in the relevant sections of `AGENTS.md`.
+- **Keep it Current**: After every task that adds, removes, or changes a user-visible feature or developer workflow, update the relevant docs:
+  - `README.md` — user-facing features, setup, commands
+  - `AGENTS.md` — project structure, tools, patterns, commands (this file)
+  - `docs/product/ROADMAP.md` — move items between Now / Next / Later as they are completed or reprioritised
+  - `docs/product/BACKLOG.md` — mark items done (✅) and add new ungroomed items
+  - `docs/product/PRODUCT.md` — update feature descriptions when behaviour changes
+- **Completeness**: New tools, CLI commands, API endpoints, and environment variables must be reflected in `AGENTS.md` and `README.md` before the PR is merged.
+- **No Stale References**: Delete or update any link or reference that no longer points to a real file or section.
