@@ -198,6 +198,12 @@ body {
   letter-spacing: inherit;
 }
 
+.header-home-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
 .header-icon {
   height: 2rem;
   width: 2rem;

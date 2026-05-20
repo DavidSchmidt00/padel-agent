@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
+import { voteDateRangeLabel } from '../utils/voteLabel'
 
 function formatDate(iso) {
   const [, m, d] = iso.split('-')
@@ -66,16 +67,8 @@ export default function VotePage({ voteId, onVoteVisited, isActive }) {
       if (data.booked_slots?.length) setBookedSlots(new Set(data.booked_slots))
       if (!visitedRef.current) {
         visitedRef.current = true
-        const dates = data.slots?.map((s) => s.date) ?? []
-        if (dates.length) {
-          const minDate = dates.reduce((a, b) => (a < b ? a : b), dates[0])
-          const maxDate = dates.reduce((a, b) => (a > b ? a : b), dates[0])
-          const dateRange =
-            minDate === maxDate ? formatDate(minDate) : `${formatDate(minDate)}–${formatDate(maxDate)}`
-          onVoteVisited?.(voteId, dateRange)
-        } else {
-          onVoteVisited?.(voteId)
-        }
+        const dateRange = voteDateRangeLabel(data.slots?.map((s) => s.date) ?? [])
+        onVoteVisited?.(voteId, dateRange ?? undefined)
       }
     } finally {
       setLoading(false)

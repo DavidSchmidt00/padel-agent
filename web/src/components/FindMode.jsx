@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import usePresets from '../hooks/usePresets'
+import { voteDateRangeLabel } from '../utils/voteLabel'
 
 const DAY_KEYS = [0, 1, 2, 3, 4, 5, 6]
 
@@ -298,6 +299,7 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
       setResults(data.results)
       setSummary({ count: data.total_count, days: data.dates_checked })
       setFormExpanded(false)
+      containerRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
     } catch (err) {
       setError(err.message)
     } finally {
@@ -336,11 +338,7 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
       const shareUrl = `${window.location.origin}/vote/${data.vote_id}`
       setVoteUrl(shareUrl)
       setVoteMode(false)
-      const slotDates = chosenSlots.map((s) => s.date)
-      const minDate = slotDates.reduce((a, b) => (a < b ? a : b), slotDates[0])
-      const maxDate = slotDates.reduce((a, b) => (a > b ? a : b), slotDates[0])
-      const dateRange =
-        minDate === maxDate ? formatShortDate(minDate) : `${formatShortDate(minDate)}–${formatShortDate(maxDate)}`
+      const dateRange = voteDateRangeLabel(chosenSlots.map((s) => s.date))
       const clubNames = clubs.map((c) => c.name).join(', ')
       const label = clubNames ? `${clubNames} · ${dateRange}` : dateRange
       onVoteCreated?.(data.vote_id, label)

@@ -1,17 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-
-function formatDate(iso) {
-  const [, m, d] = iso.split('-')
-  return `${d}.${m}`
-}
+import { voteDateRangeLabel } from '../utils/voteLabel'
 
 function deriveLabel(session) {
-  const dates = session.slots?.map((s) => s.date) ?? []
-  if (!dates.length) return null
-  const minDate = dates.reduce((a, b) => (a < b ? a : b), dates[0])
-  const maxDate = dates.reduce((a, b) => (a > b ? a : b), dates[0])
-  return minDate === maxDate ? formatDate(minDate) : `${formatDate(minDate)}–${formatDate(maxDate)}`
+  return voteDateRangeLabel(session.slots?.map((s) => s.date) ?? [])
 }
 
 export default function ProfilePage({ myVotes, onRemoveVote, onNavigateToVote, onNavigateToFind }) {
