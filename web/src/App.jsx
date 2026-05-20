@@ -149,22 +149,25 @@ export default function App() {
         <button
           className={`bottom-nav-btn${mode === 'chat' ? ' active' : ''}`}
           onClick={() => navigateTo('chat')}
+          aria-label={t('findMode.mode_chat')}
         >
-          <span className="bottom-nav-icon">💬</span>
+          <span className="bottom-nav-icon" aria-hidden="true">💬</span>
           <span className="bottom-nav-label">{t('findMode.mode_chat')}</span>
         </button>
         <button
           className={`bottom-nav-btn${mode === 'find' ? ' active' : ''}`}
           onClick={() => navigateTo('find')}
+          aria-label={t('findMode.mode_find')}
         >
-          <span className="bottom-nav-icon">🔍</span>
+          <span className="bottom-nav-icon" aria-hidden="true">🔍</span>
           <span className="bottom-nav-label">{t('findMode.mode_find')}</span>
         </button>
         <button
           className={`bottom-nav-btn${mode === 'profile' || mode === 'vote' ? ' active' : ''}`}
           onClick={() => navigateTo('profile')}
+          aria-label={t('nav.profile')}
         >
-          <span className="bottom-nav-icon">👤</span>
+          <span className="bottom-nav-icon" aria-hidden="true">👤</span>
           <span className="bottom-nav-label">{t('nav.profile')}</span>
         </button>
       </nav>

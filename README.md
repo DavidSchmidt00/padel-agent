@@ -1,337 +1,138 @@
-# Playtomic CLI & AI Agent
+# Padel Agent
 
-> [!WARNING]
-> This project is under **active development**. Features and APIs may change.
+An AI-powered assistant for finding and booking Padel court slots on Playtomic. The project ships a React web app with three modes, a WhatsApp bot, and a Python CLI — all backed by a FastAPI service and a LangGraph AI agent.
 
-An AI-powered assistant and comprehensive toolkit for finding available Padel court slots on Playtomic. The project features a LangGraph-based agent that enables natural language interaction for slot search, along with a powerful Python client library and CLI.
+## Features
 
-## ✨ Features
+- **Chat Mode** — Converse with an AI agent (Google Gemini or NVIDIA NIM) in natural language. Ask it to find slots, and it will search Playtomic for you.
+- **Find Mode** — Direct slot search: pick clubs, date range, time windows, court type and duration. No AI involved, just fast results.
+- **Group Voting** — Select candidate slots from a Find Mode search, share a link, and let everyone vote on which time works best.
+- **WhatsApp Bot** — Same AI agent accessible over WhatsApp via neonize. Persists per-user history and preferences in SQLite.
+- **User Profile Memory** — The agent learns your preferred club, city, court type, duration and preferred time. Stored in browser `localStorage` (web) or SQLite (WhatsApp).
+- **Python CLI** — Search clubs and query available slots directly from the terminal.
+- **Multi-region** — Language, timezone and country are auto-detected or configurable per request.
+- **Dark / Light theme** — Toggled via the settings menu.
 
-- **🤖 AI Agent (LangGraph)**: Natural language interface to find the perfect slot
-- **🐍 Python Client Library**: Class-based APIclient with full type hints
-- **💻 Command-Line Interface**: Direct CLI for quick searches
-- **🔍 Advanced Filtering**:
-  - Filter by club (slug or name)
-  - Filter by court type (SINGLE or DOUBLE)
-  - Filter by time range with timezone support
-  - Filter by slot duration (60, 90, 120 minutes)
-- **🧠 User Profile (Memory)**: Remembers your preferences (preferred club, court type, etc.) across sessions
-- **🛡️ Robust Error Handling**: Custom exceptions for better debugging
+## Project Structure
 
-## 📦 Installation
+```
+src/playtomic_agent/
+├── web/
+│   ├── agent.py        # Web LangGraph agent
+│   └── api.py          # FastAPI app: /api/chat (SSE), /api/search, /api/votes, /api/clubs
+├── whatsapp/
+│   ├── server.py       # neonize entry point
+│   ├── agent.py        # WhatsApp LangGraph agent
+│   └── storage.py      # UserStorage (SQLite)
+├── tools.py            # LangChain @tool definitions
+├── llm.py              # Shared LLM instance (Gemini / NVIDIA)
+├── config.py           # Settings via pydantic-settings / .env
+├── context.py          # ContextVar helpers: language, country, timezone
+├── models.py           # Pydantic models: Club, Court, Slot
+└── client/
+    ├── api.py          # PlaytomicClient
+    ├── cli.py          # playtomic-cli entry point
+    ├── utils.py        # Geocoding, booking URL helpers
+    └── exceptions.py
+web/                    # React 18 + Vite frontend
+tests/                  # pytest suite
+docs/
+├── DEPLOYMENT.md       # Railway deployment guide
+└── product/            # Product strategy, roadmap, backlog
+```
 
-### From Source
+## Setup
+
+### Prerequisites
+
+- Python ≥ 3.11 and [uv](https://docs.astral.sh/uv/)
+- Node.js ≥ 18 (for the web frontend)
+
+### Install
 
 ```bash
-git clone https://github.com/DavidSchmidt00/playtomic-agent.git
-cd playtomic-agent
-pip install -e .
+uv sync
 ```
 
-### With Development Dependencies
+### Configure
 
 ```bash
-pip install -e ".[dev]"
+cp .env.example .env   # then fill in the values
 ```
 
-## ⚙️ Configuration
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `GEMINI_API_KEY` | if `LLM_PROVIDER=gemini` (default) | — | Google Gemini API key |
+| `NVIDIA_API_KEY` | if `LLM_PROVIDER=nvidia` | — | NVIDIA API key (`nvapi-…`) |
+| `NVIDIA_BASE_URL` | no | — | Base URL for a self-hosted NVIDIA NIM |
+| `LLM_PROVIDER` | no | `gemini` | `gemini` or `nvidia` |
+| `DEFAULT_MODEL` | no | provider default | Override model ID |
+| `DEFAULT_TIMEZONE` | no | `Europe/Berlin` | Fallback timezone |
+| `PLAYTOMIC_API_BASE_URL` | no | `https://api.playtomic.io/v1` | Playtomic REST API base |
+| `WHATSAPP_PHONE_NUMBER` | WhatsApp only | — | Phone for pairing-code login |
+| `WHATSAPP_SESSION_DB` | WhatsApp only | `data/whatsapp_session.db` | neonize SQLite session file |
+| `WHATSAPP_STORAGE_PATH` | WhatsApp only | `data/whatsapp_users.db` | Per-user state (SQLite) |
 
-The application reads configuration from environment variables (or a `.env` file in the project root). Start from the provided template:
+## Running
+
+### Web app (backend + frontend)
 
 ```bash
-cp .env.example .env
+# Backend (port 8082)
+uvicorn playtomic_agent.web.api:app --reload --port 8082
+
+# Frontend (port 8080)
+cd web && npm install && npm run dev -- --port 8080
 ```
 
-### Required variables
+Open [http://localhost:8080](http://localhost:8080).
 
-| Variable | When required | Description |
-|---|---|---|
-| `GEMINI_API_KEY` | `LLM_PROVIDER=gemini` (default) | Google Gemini API key — get one at [aistudio.google.com](https://aistudio.google.com/) |
-| `NVIDIA_API_KEY` | `LLM_PROVIDER=nvidia` | NVIDIA API key (starts with `nvapi-`) |
-| `WHATSAPP_PHONE_NUMBER` | Running `whatsapp-agent` | Phone number with country code (e.g. `+491729975477`), used for pairing-code login. Without it the agent cannot pair on first run. |
-
-### Optional variables (with defaults)
-
-| Variable | Default | Description |
-|---|---|---|
-| `LLM_PROVIDER` | `gemini` | LLM backend: `gemini` or `nvidia` |
-| `DEFAULT_MODEL` | `gemini-3.0-flash-preview` / `deepseek-ai/deepseek-v3.1-terminus` | Override the model for the selected provider. Provider defaults are used when unset. |
-| `DEFAULT_TIMEZONE` | `Europe/Berlin` | Timezone used when the user's timezone is unknown |
-| `PLAYTOMIC_API_BASE_URL` | `https://api.playtomic.io/v1` | Playtomic REST API base URL |
-| `LOG_LEVEL` | `INFO` | Python logging level (`DEBUG`, `INFO`, `WARNING`, `ERROR`) |
-| `WHATSAPP_SESSION_DB` | `data/whatsapp_session.db` | Path to the SQLite file where neonize stores the WhatsApp session |
-| `WHATSAPP_STORAGE_PATH` | `data/whatsapp_users.json` | Path to the JSON file storing per-user WhatsApp state and history |
-| `WHATSAPP_DEVICE_OS` | `Chrome` | Device OS name reported to WhatsApp (avoids the default `Neonize` fingerprint) |
-| `WHATSAPP_DEVICE_PLATFORM` | `CHROME` | `DeviceProps.PlatformType` reported to WhatsApp. Valid values: `CHROME`, `FIREFOX`, `SAFARI`, `EDGE`, `DESKTOP`, `IOS_PHONE`, `ANDROID_PHONE` |
-| `WHATSAPP_SEND_DELAY_WPM` | `400.0` | Simulated typing speed (words/minute) added before sending a reply. Set to `0` to disable. |
-
-
-## 🚀 Usage
-
-### 1. AI Agent (Natural Language)
-
-#### Using LangGraph Studio/API
+### WhatsApp agent
 
 ```bash
-cd src/playtomic_agent
-langgraph dev
+whatsapp-agent           # scan QR on first run
+LOG_LEVEL=DEBUG whatsapp-agent
 ```
 
-Then interact through the LangGraph Studio UI or API.
-
-#### Programmatic Usage
-
-```python
-from playtomic_agent.agent import playtomic_agent
-
-# Stream agent responses
-for chunk in playtomic_agent.stream(
-    {"messages": [{"role": "user", "content":
-        "Find a 90-minute double court slot at lemon-padel-club "
-        "tomorrow between 18:00 and 20:00"
-    }]},
-    stream_mode="updates",
-):
-    for step, data in chunk.items():
-        print(f"{step}: {data['messages'][-1].content}")
-```
-
-### 2. Python Client Library
-
-The modern, class-based client provides full control:
-
-```python
-from playtomic_agent.client.api import PlaytomicClient
-
-# Use as context manager for automatic cleanup
-with PlaytomicClient() as client:
-    # Find available slots
-    slots = client.find_slots(
-        club_slug="lemon-padel-club",
-        date="2026-02-15",
-        court_type="DOUBLE",
-        start_time="18:00",
-        end_time="20:00",
-        timezone="Europe/Berlin",
-        duration=90
-    )
-
-    for slot in slots:
-        print(f"{slot.court_name}: {slot.time} - {slot.price}")
-        print(f"Book: {slot.get_link()}")
-```
-
-#### Advanced Usage with Direct Methods
-
-```python
-from playtomic_agent.client.api import PlaytomicClient
-
-with PlaytomicClient() as client:
-    # 1. Get club information
-    club = client.get_club(slug="lemon-padel-club")
-    print(f"Club: {club.name} ({len(club.courts)} courts)")
-
-    # 2. Get all available slots
-    available_slots = client.get_available_slots(
-        club,
-        date="2026-02-15",
-        start_time="18:00",  # UTC
-        end_time="20:00"
-    )
-
-    # 3. Filter manually
-    filtered = client.filter_slots(
-        club,
-        available_slots,
-        court_type="DOUBLE",
-        duration=90
-    )
-```
-
-### 3. Command-Line Interface
-
-The CLI supports two main modes: `search` and `slots`.
-
-#### Search for Clubs
-Find clubs by location (using geocoding) or by name.
+### CLI
 
 ```bash
-# Search by Location
-playtomic-cli search --location "Berlin"
-
-# Search by Name
 playtomic-cli search --name "Lemon Padel"
+playtomic-cli slots --club-slug lemon-padel-club --date 2026-05-20 --json
 ```
 
-#### Find Available Slots
-Find slots for a specific club.
+## Development
 
 ```bash
-# Find all slots for today
-playtomic-cli slots --club-slug lemon-padel-club
-
-# Find 90-minute double court slots tomorrow
-playtomic-cli slots \
-    --club-slug lemon-padel-club \
-    --date 2026-02-15 \
-    --court-type DOUBLE \
-    --duration 90 \
-    --start-time 18:00 \
-    --end-time 20:00 \
-    --timezone Europe/Berlin
-
-# Output as JSON
-playtomic-cli slots --club-slug lemon-padel-club --json
-```
-
-## 🧠 User Profile (Memory)
-
-The agent can remember your preferences across sessions using Browser Local Storage.
-
-**Supported preferences:**
-- **Preferred Club**: Your go-to padel club
-- **City**: Your default location for club searches
-- **Court Type**: SINGLE or DOUBLE
-- **Duration**: Preferred slot duration (e.g., 90 minutes)
-- **Preferred Time**: Your usual play time (e.g., "evenings")
-
-**How it works:**
-1. When you search, the agent may suggest saving your preferences.
-2. A confirmation prompt appears in the chat — click "Save" or "No thanks".
-3. Saved preferences appear as pills above the chat box and are used automatically in future searches.
-4. You can remove individual preferences or clear all at any time.
-
-## 🌐 Web UI (Experimental) ✅
-
-A minimal, extensible web frontend is included to interact with the LangGraph-based Playtomic agent. The frontend is a small React app (Vite) that talks to a FastAPI endpoint exposed by the Python service. It provides a centered chat UI with Markdown rendering, a loading indicator, and a user profile card.
-
-1. Start the Dev Container in VS Code or Cursor.
-
-2. The Backend (FastAPI) and Frontend (React) servers will automatically start via VS Code Tasks.
-3. Access the web app at http://localhost:8080 to use the chat interface.
-
-If running outside the container:
-1. Install Python dependencies and start the API server:
-
-```bash
-pip install -e .
-uvicorn playtomic_agent.api:app --host 0.0.0.0 --port 8082
-```
-
-2. Start the frontend (port 8080):
-
-```bash
-cd web
-npm install
-npm run dev -- --port 8080
-```
-
-3. Open your browser at http://localhost:8080 to use the chat interface.
-
-Notes:
-- The frontend displays tool execution status (e.g. "Searching for clubs...") and the final assistant reply. Internal reasoning details are hidden.
-- Add API-related settings (e.g. GEMINI API keys) to `.env` when using the agent for real runs.
-
----
-
-## 🏗️ Architecture
-
-For a deep dive into the project's internals, see the **[Developer Guide](DEVELOPER_GUIDE.md)**.
-
-### Quick Overview
-
-```mermaid
-graph TD
-    User[User] -->|Chat| Frontend[React Web UI]
-    Frontend -->|Unidirectional Stream| Backend[Python API (FastAPI)]
-    Backend -->|Orchestrates| Agent[LangGraph Agent]
-    Agent -->|Uses| Tools[Tools]
-    Tools -->|Calls| PlaytomicAPI[Playtomic API]
-    Agent -->|Queries| LLM[Google Gemini]
-```
-
-The project is split into two main parts:
-1.  **Backend (`src/`)**: Python application using LangChain/LangGraph and FastAPI.
-2.  **Frontend (`web/`)**: React application using Vite.
-
-## 🧪 Development
-
-### Running Tests
-
-```bash
-# Run all tests
+# Tests
 pytest tests/ -v
 
-# Run with coverage
-pytest tests/ --cov=src/playtomic_agent --cov-report=html
-
-# Run specific test file
-pytest tests/test_client.py -v
-```
-
-### Code Quality
-
-```bash
-# Format code
-black src/ tests/
-
-# Lint
+# Lint & format
 ruff check src/ tests/
+ruff format src/ tests/
 
 # Type checking
 mypy src/
 ```
 
-## 📚 API Reference
+## Deployment
 
-### PlaytomicClient
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for Railway setup (web + WhatsApp as separate services).
 
-Main client class for interacting with the Playtomic API.
+## Architecture
 
-**Methods:**
-- `get_club(slug=None, name=None)` - Fetch club information
-- `get_available_slots(club, date, start_time=None, end_time=None)` - Get available slots
-- `filter_slots(club, available_slots, court_type=None, duration=None)` - Filter slots
-- `find_slots(club_slug, date, **filters)` - Convenience method combining all steps
+```
+Browser/WhatsApp
+      │
+      ▼
+FastAPI (web/api.py)         ← SSE streaming for chat, REST for search/votes
+      │
+      ├── LangGraph Agent    ← tools.py, llm.py
+      │       └── Tools: find_slots, find_clubs_by_location, find_clubs_by_name,
+      │                   create_booking_link, update_user_profile, suggest_next_steps
+      └── PlaytomicClient    ← direct API calls for /api/search, /api/clubs
+```
 
-**Exceptions:**
-- `ClubNotFoundError` - Club not found
-- `MultipleClubsFoundError` - Multiple clubs match identifier
-- `APIError` - API request failed
-- `ValidationError` - Invalid input parameters
-
-### Models
-
-All models are Pydantic models with full validation:
-
-- `Club` - Represents a Playtomic club
-- `Court` - Represents a court (single/double)
-- `Slot` - Represents an available time slot
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these guidelines:
-
-1. Fork the repository
-2. Create a feature branch
-3. Install development dependencies: `pip install -e ".[dev]"`
-4. Write tests for new features
-5. Ensure all tests pass: `pytest tests/`
-6. Format code: `black src/ tests/`
-7. Submit a pull request
-
-## 📝 License
+## License
 
 MIT
-
-## 🙏 Acknowledgments
-
-- Built with [LangGraph](https://github.com/langchain-ai/langgraph) for AI agent orchestration
-- Powered by [Google Gemini](https://ai.google.dev/) for natural language understanding
-- Uses the Playtomic API for court availability data
-
-## 🔗 Links
-
-- [Documentation](https://github.com/DavidSchmidt00/playtomic-agent)
-- [Issue Tracker](https://github.com/DavidSchmidt00/playtomic-agent/issues)
-- [LangGraph Documentation](https://langchain-ai.github.io/langgraph/)
