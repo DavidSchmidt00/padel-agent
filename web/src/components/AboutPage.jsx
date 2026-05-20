@@ -9,7 +9,7 @@ export default function AboutPage({ onNavigate }) {
 
         {/* Hero */}
         <div className="about-hero">
-          <div className="about-hero-icon">🎾</div>
+          <div className="about-hero-icon"><img src="/icon.svg" alt="Padel Agent" /></div>
           <h2 className="about-hero-title">Padel Agent</h2>
           <p className="about-hero-tagline">{t('about.tagline')}</p>
         </div>

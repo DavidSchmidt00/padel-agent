@@ -86,18 +86,6 @@ export default function SettingsMenu({ region, onRegionChange, theme, onThemeTog
                         </div>
                     </div>
 
-                    {/* ── Account ── */}
-                    <div className="settings-section">
-                        <div className="settings-section-label">{t('settings.account')}</div>
-                        <div className="settings-account-row">
-                            <div className="settings-account-avatar">👤</div>
-                            <div>
-                                <div className="settings-account-name">{t('settings.guest')}</div>
-                                <div className="settings-account-sub">{t('settings.sign_in_soon')}</div>
-                            </div>
-                        </div>
-                    </div>
-
                     {/* ── Links ── */}
                     <div className="settings-section">
                         <button

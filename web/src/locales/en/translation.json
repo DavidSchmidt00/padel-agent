@@ -143,6 +143,21 @@
     "chat": {
         "open_in_find_mode": "Open in Find Mode"
     },
+    "nav": {
+        "profile": "Profile"
+    },
+    "myVotes": {
+        "title": "My Votes",
+        "empty_title": "No votes yet",
+        "empty_sub": "Create a group vote from Find mode — it will appear here.",
+        "loading": "Loading…",
+        "expired": "Expired",
+        "voters_one": "{{count}} voter",
+        "voters_other": "{{count}} voters",
+        "remove": "Remove from list",
+        "share": "Copy link",
+        "share_copied": "Copied!"
+    },
     "votePage": {
         "title": "Group Vote",
         "your_name": "Your name",
@@ -172,6 +187,8 @@
         "book_btn": "Book now →",
         "loading": "Loading…",
         "not_found": "This vote link has expired or doesn't exist.",
-        "expires_note": "This link expires the day after the last slot date."
+        "expires_note": "This link expires the day after the last slot date.",
+        "share": "Copy link",
+        "share_copied": "Copied!"
     }
 }

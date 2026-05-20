@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="grad" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop class="gs" offset="0%"   stop-color="#22ff7a"/>
+      <stop class="ge" offset="100%" stop-color="#00d4ff"/>
+    </linearGradient>
+    <style>
+      /*
+        Light-mode overrides.
+        stop-color, fill, and similar presentation attributes can be overridden
+        by CSS — this is how SVG favicons get native theme switching in
+        Chrome, Firefox, and Edge without any JavaScript.
+      */
+      .bg   { fill: #0f1117; }
+      .face { fill: #091510; }
+      .grip { fill: #0f1117; }
+      .spark { fill: #ffffff; }
+      .gs   { stop-color: #22ff7a; }
+      .ge   { stop-color: #00d4ff; }
+
+      @media (prefers-color-scheme: light) {
+        .bg   { fill: #ffffff; }
+        .face { fill: #f0fdf4; }
+        .grip { fill: #ffffff; }
+        .spark { fill: #0f1117; }
+        .gs   { stop-color: #16a34a; }
+        .ge   { stop-color: #0891b2; }
+      }
+    </style>
+  </defs>
+
+  <rect class="bg" width="512" height="512" rx="108"/>
+
+  <g transform="rotate(-15, 256, 268)">
+    <path
+      d="M 194,303
+         A 125,125 0 1 1 318,303
+         L 281,326 L 281,450
+         A 25,25 0 0 1 231,450
+         L 231,326 Z"
+      fill="url(#grad)"
+    />
+
+    <circle class="face" cx="256" cy="195" r="100"/>
+
+    <!-- Holes: hex diamond pattern 3-4-5-4-3 -->
+    <circle cx="216" cy="120" r="11" fill="url(#grad)"/>
+    <circle cx="256" cy="120" r="11" fill="url(#grad)"/>
+    <circle cx="296" cy="120" r="11" fill="url(#grad)"/>
+    <circle cx="196" cy="153" r="11" fill="url(#grad)"/>
+    <circle cx="236" cy="153" r="11" fill="url(#grad)"/>
+    <circle cx="276" cy="153" r="11" fill="url(#grad)"/>
+    <circle cx="316" cy="153" r="11" fill="url(#grad)"/>
+    <circle cx="176" cy="186" r="11" fill="url(#grad)"/>
+    <circle cx="216" cy="186" r="11" fill="url(#grad)"/>
+    <circle cx="256" cy="186" r="11" fill="url(#grad)"/>
+    <circle cx="296" cy="186" r="11" fill="url(#grad)"/>
+    <circle cx="336" cy="186" r="11" fill="url(#grad)"/>
+    <circle cx="196" cy="219" r="11" fill="url(#grad)"/>
+    <circle cx="236" cy="219" r="11" fill="url(#grad)"/>
+    <circle cx="276" cy="219" r="11" fill="url(#grad)"/>
+    <circle cx="316" cy="219" r="11" fill="url(#grad)"/>
+    <circle cx="216" cy="252" r="11" fill="url(#grad)"/>
+    <circle cx="256" cy="252" r="11" fill="url(#grad)"/>
+    <circle cx="296" cy="252" r="11" fill="url(#grad)"/>
+
+    <rect class="grip" x="231" y="350" width="50" height="5" rx="2" opacity="0.45"/>
+    <rect class="grip" x="231" y="370" width="50" height="5" rx="2" opacity="0.45"/>
+    <rect class="grip" x="231" y="390" width="50" height="5" rx="2" opacity="0.45"/>
+    <rect class="grip" x="231" y="410" width="50" height="5" rx="2" opacity="0.45"/>
+  </g>
+
+  <!-- Three AI sparkle stars (large, medium, small) -->
+  <path class="spark" d="M413,90 L398,85 L393,70 L388,85 L373,90 L388,95 L393,110 L398,95 Z"/>
+  <path class="spark" d="M384,62 L375,59 L372,50 L369,59 L360,62 L369,65 L372,74 L375,65 Z"/>
+  <path class="spark" d="M420,60 L414,58 L412,52 L410,58 L404,60 L410,62 L412,68 L414,62 Z"/>
+</svg>

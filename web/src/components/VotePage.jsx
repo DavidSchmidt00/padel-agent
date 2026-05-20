@@ -17,7 +17,7 @@ function threshold(courtType) {
 
 const LS_KEY = (voteId) => `vote-${voteId}`
 
-export default function VotePage({ voteId }) {
+export default function VotePage({ voteId, onVoteVisited, isActive }) {
   const { t, i18n } = useTranslation()
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -25,6 +25,7 @@ export default function VotePage({ voteId }) {
   const [voterName, setVoterName] = useState('')
   const [pendingVotes, setPendingVotes] = useState({})
   const [submittedVotes, setSubmittedVotes] = useState(null)
+  const [sessionSubmitted, setSessionSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(null)
   const [availability, setAvailability] = useState({})
@@ -32,6 +33,7 @@ export default function VotePage({ voteId }) {
   const [bookingSlot, setBookingSlot] = useState(null)
   const [adminMode, setAdminMode] = useState(false)
   const [bookingError, setBookingError] = useState(null)
+  const [copiedLink, setCopiedLink] = useState(false)
   const timerRef = useRef(null)
   const availTimerRef = useRef(null)
 
@@ -49,6 +51,7 @@ export default function VotePage({ voteId }) {
     }
   }, [voteId])
 
+  const visitedRef = useRef(false)
   const fetchSession = useCallback(async () => {
     try {
       const res = await fetch(`/api/votes/${voteId}`)
@@ -61,16 +64,39 @@ export default function VotePage({ voteId }) {
       const data = await res.json()
       setSession(data)
       if (data.booked_slots?.length) setBookedSlots(new Set(data.booked_slots))
+      if (!visitedRef.current) {
+        visitedRef.current = true
+        const dates = data.slots?.map((s) => s.date) ?? []
+        if (dates.length) {
+          const minDate = dates.reduce((a, b) => (a < b ? a : b), dates[0])
+          const maxDate = dates.reduce((a, b) => (a > b ? a : b), dates[0])
+          const dateRange =
+            minDate === maxDate ? formatDate(minDate) : `${formatDate(minDate)}–${formatDate(maxDate)}`
+          onVoteVisited?.(voteId, dateRange)
+        } else {
+          onVoteVisited?.(voteId)
+        }
+      }
     } finally {
       setLoading(false)
     }
-  }, [voteId])
+  }, [voteId, onVoteVisited])
 
   useEffect(() => {
     fetchSession()
     timerRef.current = setInterval(fetchSession, 3000)
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [fetchSession])
+
+  useEffect(() => {
+    if (!sessionSubmitted) return
+    const timer = setTimeout(() => setSessionSubmitted(false), 10000)
+    return () => clearTimeout(timer)
+  }, [sessionSubmitted])
+
+  useEffect(() => {
+    if (!isActive) setSessionSubmitted(false)
+  }, [isActive])
 
   const fetchAvailability = useCallback(async () => {
     try {
@@ -118,6 +144,7 @@ export default function VotePage({ voteId }) {
         : prev)
       const saved = { ...pendingVotes }
       setSubmittedVotes(saved)
+      setSessionSubmitted(true)
       try {
         localStorage.setItem(LS_KEY(voteId), JSON.stringify({ voterName: voterName.trim(), votes: saved }))
       } catch {
@@ -132,7 +159,11 @@ export default function VotePage({ voteId }) {
     setBookingSlot(slotId)
     setBookingError(null)
     try {
-      const res = await fetch(`/api/votes/${voteId}/slots/${slotId}/book`, { method: 'POST' })
+      const res = await fetch(`/api/votes/${voteId}/book`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slot_id: slotId }),
+      })
       if (!res.ok) { setBookingError(t('votePage.booking_error')); return }
       const data = await res.json()
       setBookedSlots(new Set(data.booked_slots ?? []))
@@ -148,7 +179,11 @@ export default function VotePage({ voteId }) {
     setBookingSlot(slotId)
     setBookingError(null)
     try {
-      const res = await fetch(`/api/votes/${voteId}/slots/${slotId}/book`, { method: 'DELETE' })
+      const res = await fetch(`/api/votes/${voteId}/book`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slot_id: slotId }),
+      })
       if (!res.ok) { setBookingError(t('votePage.booking_error')); return }
       const data = await res.json()
       setBookedSlots(new Set(data.booked_slots ?? []))
@@ -166,6 +201,7 @@ export default function VotePage({ voteId }) {
   function handleChangeVote() {
     setPendingVotes({ ...submittedVotes })
     setSubmittedVotes(null)
+    setSessionSubmitted(false)
     setSubmitError(null)
   }
 
@@ -193,6 +229,21 @@ export default function VotePage({ voteId }) {
             </button>
           )}
           <button
+            className="vote-admin-toggle"
+            onClick={() => {
+              const url = `${window.location.origin}/vote/${voteId}`
+              navigator.clipboard.writeText(url).catch(() => {})
+              setCopiedLink(true)
+              setTimeout(() => setCopiedLink(false), 1500)
+            }}
+            aria-label={t('votePage.share')}
+          >
+            <span aria-hidden="true">{copiedLink ? '✓' : '🔗'}</span>
+            <span className="vote-admin-label">
+              {copiedLink ? t('votePage.share_copied') : t('votePage.share')}
+            </span>
+          </button>
+          <button
             className={`vote-admin-toggle${adminMode ? ' vote-admin-toggle--active' : ''}`}
             onClick={() => setAdminMode(m => !m)}
             aria-label={t('votePage.admin_mode')}
@@ -202,20 +253,6 @@ export default function VotePage({ voteId }) {
           </button>
         </div>
       </div>
-
-      {/* Name input */}
-      {submittedVotes === null && (
-        <div className="find-field" style={{ marginBottom: '14px' }}>
-          <label>{t('votePage.your_name')}</label>
-          <input
-            type="text"
-            value={voterName}
-            onChange={e => setVoterName(e.target.value)}
-            placeholder={t('votePage.name_placeholder')}
-            maxLength={40}
-          />
-        </div>
-      )}
 
       {/* Who has voted */}
       {session?.voters?.length > 0 ? (
@@ -355,32 +392,42 @@ export default function VotePage({ voteId }) {
       </div>
 
       {/* Unvoted hint */}
-      {submittedVotes === null && voterName.trim() && unvotedCount > 0 && (
+      {submittedVotes === null && unvotedCount > 0 && (
         <p className="vote-unvoted-hint">
           {t('votePage.unvoted_hint', { count: unvotedCount })}
         </p>
       )}
 
       {/* Submit / status */}
-      <div className="vote-submit-row">
-        {submittedVotes === null ? (
-          <button
-            className="find-submit"
-            style={{ margin: 0, opacity: !voterName.trim() ? 0.5 : 1 }}
-            disabled={!voterName.trim() || submitting}
-            onClick={handleSubmitVotes}
-          >
-            {submitting ? t('votePage.submitting') : t('votePage.submit_btn')}
-          </button>
-        ) : (
-          <span className="vote-submitted-label">{t('votePage.submitted_label')}</span>
-        )}
-      </div>
+      <p className="vote-expires-note">{t('votePage.expires_note')}</p>
 
       {submitError && <p className="vote-error-msg">{submitError}</p>}
       {bookingError && <p className="vote-error-msg">{bookingError}</p>}
 
-      <p className="vote-expires-note">{t('votePage.expires_note')}</p>
+      <div className="vote-submit-row">
+        {submittedVotes === null ? (
+          <>
+            <div className="vote-name-field">
+              <input
+                type="text"
+                value={voterName}
+                onChange={e => setVoterName(e.target.value)}
+                placeholder={t('votePage.name_placeholder')}
+                maxLength={40}
+              />
+            </div>
+            <button
+              className="vote-submit-btn"
+              disabled={!voterName.trim() || submitting}
+              onClick={handleSubmitVotes}
+            >
+              {submitting ? t('votePage.submitting') : t('votePage.submit_btn')}
+            </button>
+          </>
+        ) : sessionSubmitted ? (
+          <span className="vote-submitted-label">✓ {t('votePage.submitted_label')}</span>
+        ) : null}
+      </div>
     </div>
   )
 }

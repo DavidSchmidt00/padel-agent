@@ -30,7 +30,7 @@ function todayStr() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-export default function FindMode({ region, profile, initialParams, onParamsConsumed }) {
+export default function FindMode({ region, profile, initialParams, onParamsConsumed, onVoteCreated }) {
   const { t, i18n } = useTranslation()
 
   const [clubs, setClubs] = useState(
@@ -335,6 +335,15 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
       const data = await res.json()
       const shareUrl = `${window.location.origin}/vote/${data.vote_id}`
       setVoteUrl(shareUrl)
+      setVoteMode(false)
+      const slotDates = chosenSlots.map((s) => s.date)
+      const minDate = slotDates.reduce((a, b) => (a < b ? a : b), slotDates[0])
+      const maxDate = slotDates.reduce((a, b) => (a > b ? a : b), slotDates[0])
+      const dateRange =
+        minDate === maxDate ? formatShortDate(minDate) : `${formatShortDate(minDate)}–${formatShortDate(maxDate)}`
+      const clubNames = clubs.map((c) => c.name).join(', ')
+      const label = clubNames ? `${clubNames} · ${dateRange}` : dateRange
+      onVoteCreated?.(data.vote_id, label)
       await navigator.clipboard.writeText(shareUrl).catch(() => {})
       containerRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
     } catch {
@@ -377,7 +386,7 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
             </button>
             <button
               type="button"
-              className="clear-chat-btn"
+              className="find-icon-btn"
               onClick={handleClearSearch}
               title={t('findMode.clear_search', { defaultValue: 'Clear search' })}
             >
@@ -444,7 +453,7 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
                     type="button"
                     onClick={() => { setDateFrom(today); setDateTo(end) }}
                     className="suggestion-chip"
-                    style={active ? { background: 'var(--accent-subtle)', borderColor: 'rgba(6,182,212,0.4)', color: 'var(--accent)' } : {}}
+                    style={active ? { background: 'var(--accent-subtle)', borderColor: 'rgba(34,255,122,0.4)', color: 'var(--accent)' } : {}}
                   >
                     {label}
                   </button>
@@ -589,9 +598,13 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
             <div className="find-preset-pills">
               {presets.map(p => (
                 <div key={p.id} className="find-club-chip">
-                  <span className="find-club-chip-label" onClick={() => handleLoadPreset(p.settings)}>
+                  <button
+                    type="button"
+                    className="find-club-chip-label"
+                    onClick={() => handleLoadPreset(p.settings)}
+                  >
                     {p.name}
-                  </span>
+                  </button>
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); deletePreset(p.id) }}
@@ -682,7 +695,7 @@ export default function FindMode({ region, profile, initialParams, onParamsConsu
                               )}
                             </span>
                             <span className="find-slot-meta">{slot.duration} min</span>
-                            <span className="find-slot-price">{slot.price}</span>
+                            {slot.price && <span className="find-slot-price">{slot.price}</span>}
                             {!voteMode && (
                               <a href={slot.booking_link} target="_blank" rel="noopener noreferrer" className="find-book-btn">
                                 {t('findMode.book_btn')}

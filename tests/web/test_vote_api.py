@@ -308,21 +308,17 @@ def test_get_availability_booked_slots_returned_as_none():
     assert data["availability"]["s2"] is True
 
 
-# --- POST /api/votes/{vote_id}/slots/{slot_id}/book ---
+# --- POST /api/votes/{vote_id}/book ---
 
 
 def test_mark_slot_booked_200():
     updated_session = {**_MOCK_SESSION, "booked_slots": ["s1"]}
     m = _mock_store()
-    m.get.side_effect = [
-        _MOCK_SESSION,
-        updated_session,
-    ]  # first get validates, second returns fresh
+    m.get.side_effect = [_MOCK_SESSION, updated_session]
     with _patched(m):
-        res = client.post("/api/votes/testvote/slots/s1/book")
+        res = client.post("/api/votes/testvote/book", json={"slot_id": "s1"})
     assert res.status_code == 200
-    data = res.json()
-    assert "s1" in data["booked_slots"]
+    assert "s1" in res.json()["booked_slots"]
     m.mark_booked.assert_called_once_with("testvote", "s1")
 
 
@@ -330,17 +326,35 @@ def test_mark_slot_booked_404_unknown_vote():
     m = MagicMock()
     m.get.return_value = None
     with _patched(m):
-        res = client.post("/api/votes/nosuch/slots/s1/book")
+        res = client.post("/api/votes/nosuch/book", json={"slot_id": "s1"})
     assert res.status_code == 404
 
 
 def test_mark_slot_booked_422_unknown_slot():
     with _patched(_mock_store()):
-        res = client.post("/api/votes/testvote/slots/badslot/book")
+        res = client.post("/api/votes/testvote/book", json={"slot_id": "badslot"})
     assert res.status_code == 422
 
 
-# --- DELETE /api/votes/{vote_id}/slots/{slot_id}/book ---
+def test_mark_slot_booked_slash_in_court_name():
+    """slot_id with a slash must work when sent in JSON body (not URL path)."""
+    slot_id = "2026-05-22_20:00_Nr.05 # Doppel-/Double Court (2 gegen 2)_90"
+    session = {
+        **_MOCK_SESSION,
+        "slots": [{"slot_id": slot_id, "date": "2026-05-22", "local_time": "20:00",
+                   "court": "Nr.05 # Doppel-/Double Court (2 gegen 2)", "duration": 90,
+                   "court_type": "DOUBLE", "booking_link": "https://example.com"}],
+    }
+    updated = {**session, "booked_slots": [slot_id]}
+    m = _mock_store()
+    m.get.side_effect = [session, updated]
+    with _patched(m):
+        res = client.post("/api/votes/testvote/book", json={"slot_id": slot_id})
+    assert res.status_code == 200
+    assert slot_id in res.json()["booked_slots"]
+
+
+# --- DELETE /api/votes/{vote_id}/book ---
 
 
 def test_unmark_slot_booked_200():
@@ -349,10 +363,9 @@ def test_unmark_slot_booked_200():
     m = _mock_store()
     m.get.side_effect = [session_with_booked, unbooked_session]
     with _patched(m):
-        res = client.delete("/api/votes/testvote/slots/s1/book")
+        res = client.request("DELETE", "/api/votes/testvote/book", json={"slot_id": "s1"})
     assert res.status_code == 200
-    data = res.json()
-    assert "s1" not in data["booked_slots"]
+    assert "s1" not in res.json()["booked_slots"]
     m.unmark_booked.assert_called_once_with("testvote", "s1")
 
 
@@ -360,11 +373,11 @@ def test_unmark_slot_booked_404_unknown_vote():
     m = MagicMock()
     m.get.return_value = None
     with _patched(m):
-        res = client.delete("/api/votes/nosuch/slots/s1/book")
+        res = client.request("DELETE", "/api/votes/nosuch/book", json={"slot_id": "s1"})
     assert res.status_code == 404
 
 
 def test_unmark_slot_booked_422_unknown_slot():
     with _patched(_mock_store()):
-        res = client.delete("/api/votes/testvote/slots/badslot/book")
+        res = client.request("DELETE", "/api/votes/testvote/book", json={"slot_id": "badslot"})
     assert res.status_code == 422

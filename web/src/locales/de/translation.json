@@ -143,6 +143,21 @@
     "chat": {
         "open_in_find_mode": "Im Suchen-Modus öffnen"
     },
+    "nav": {
+        "profile": "Profil"
+    },
+    "myVotes": {
+        "title": "Meine Abstimmungen",
+        "empty_title": "Noch keine Abstimmungen",
+        "empty_sub": "Erstelle eine Gruppenabstimmung im Suchen-Modus — sie erscheint dann hier.",
+        "loading": "Lädt…",
+        "expired": "Abgelaufen",
+        "voters_one": "{{count}} Teilnehmer",
+        "voters_other": "{{count}} Teilnehmer",
+        "remove": "Aus Liste entfernen",
+        "share": "Link kopieren",
+        "share_copied": "Kopiert!"
+    },
     "votePage": {
         "title": "Gruppenabstimmung",
         "your_name": "Dein Name",
@@ -172,6 +187,8 @@
         "book_btn": "Jetzt buchen →",
         "loading": "Lädt…",
         "not_found": "Dieser Abstimmungslink ist abgelaufen oder existiert nicht.",
-        "expires_note": "Dieser Link läuft am Tag nach dem letzten Slot-Datum ab."
+        "expires_note": "Dieser Link läuft am Tag nach dem letzten Slot-Datum ab.",
+        "share": "Link kopieren",
+        "share_copied": "Kopiert!"
     }
 }
