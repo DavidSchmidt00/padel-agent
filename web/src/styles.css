@@ -723,7 +723,7 @@ body {
 .empty-icon {
   width: 3rem;
   height: 3rem;
-  margin-bottom: 0.75rem;
+  margin: 0 auto 0.75rem;
   display: block;
 }
 
