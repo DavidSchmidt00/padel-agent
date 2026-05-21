@@ -404,30 +404,32 @@ export default function VotePage({ voteId, onVoteVisited, isActive }) {
       {submitError && <p className="vote-error-msg">{submitError}</p>}
       {bookingError && <p className="vote-error-msg">{bookingError}</p>}
 
-      <div className="vote-submit-row">
-        {submittedVotes === null ? (
-          <>
-            <div className="vote-name-field">
-              <input
-                type="text"
-                value={voterName}
-                onChange={e => setVoterName(e.target.value)}
-                placeholder={t('votePage.name_placeholder')}
-                maxLength={40}
-              />
-            </div>
-            <button
-              className="vote-submit-btn"
-              disabled={!voterName.trim() || submitting}
-              onClick={handleSubmitVotes}
-            >
-              {submitting ? t('votePage.submitting') : t('votePage.submit_btn')}
-            </button>
-          </>
-        ) : sessionSubmitted ? (
-          <span className="vote-submitted-label">✓ {t('votePage.submitted_label')}</span>
-        ) : null}
-      </div>
+      {(submittedVotes === null || sessionSubmitted) && (
+        <div className="vote-submit-row">
+          {submittedVotes === null ? (
+            <>
+              <div className="vote-name-field">
+                <input
+                  type="text"
+                  value={voterName}
+                  onChange={e => setVoterName(e.target.value)}
+                  placeholder={t('votePage.name_placeholder')}
+                  maxLength={40}
+                />
+              </div>
+              <button
+                className="vote-submit-btn"
+                disabled={!voterName.trim() || submitting}
+                onClick={handleSubmitVotes}
+              >
+                {submitting ? t('votePage.submitting') : t('votePage.submit_btn')}
+              </button>
+            </>
+          ) : (
+            <span className="vote-submitted-label">✓ {t('votePage.submitted_label')}</span>
+          )}
+        </div>
+      )}
     </div>
   )
 }
